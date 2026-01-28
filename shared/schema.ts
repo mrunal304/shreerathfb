@@ -7,6 +7,8 @@ export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Mon
 export const feedbackSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phoneNumber: z.string().regex(/^9\d{9}$/, "Phone number must be 10 digits and start with 9"),
+  location: z.string().min(1, "Location is required"),
+  dineType: z.enum(["dine_in", "take_out"]),
   ratings: z.object({
     interior: z.number().min(1).max(5),
     food: z.number().min(1).max(5),
@@ -24,6 +26,8 @@ export const feedbackSchema = z.object({
 export const insertFeedbackSchema = feedbackSchema.pick({
   name: true,
   phoneNumber: true,
+  location: true,
+  dineType: true,
   ratings: true,
   note: true,
 });
