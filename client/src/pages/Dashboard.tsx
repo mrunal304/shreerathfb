@@ -1,0 +1,377 @@
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useFeedback, useMarkContacted } from "@/hooks/use-feedback";
+import { useAnalytics } from "@/hooks/use-analytics";
+import { useLogout, useUser } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { StatsCard } from "@/components/StatsCard";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  LineChart, Line, PieChart, Pie, Cell 
+} from "recharts";
+import { format } from "date-fns";
+import { 
+  LayoutDashboard, LogOut, Search, User, CheckCircle2, 
+  MessageSquare, Star, TrendingUp, Users 
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+
+const COLORS = ['#FF4500', '#228B22', '#FFBB28', '#FF8042', '#8B4513'];
+
+export default function Dashboard() {
+  const { data: user, isLoading: userLoading } = useUser();
+  const [, setLocation] = useLocation();
+  const logout = useLogout();
+  
+  if (userLoading) return null;
+  if (!user) {
+    setLocation("/admin/login");
+    return null;
+  }
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'feedback'>('overview');
+  
+  return (
+    <div className="min-h-screen bg-[#F5F5DC]/50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-secondary text-white hidden md:flex flex-col fixed h-full z-20 shadow-2xl">
+        <div className="p-6">
+          <h2 className="text-2xl font-bold font-display">Admin Panel</h2>
+        </div>
+        <nav className="flex-1 px-4 space-y-2">
+          <Button 
+            variant={activeTab === 'overview' ? 'secondary' : 'ghost'} 
+            className={`w-full justify-start ${activeTab === 'overview' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            <LayoutDashboard className="mr-2 h-5 w-5" />
+            Overview
+          </Button>
+          <Button 
+            variant={activeTab === 'feedback' ? 'secondary' : 'ghost'} 
+            className={`w-full justify-start ${activeTab === 'feedback' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+            onClick={() => setActiveTab('feedback')}
+          >
+            <MessageSquare className="mr-2 h-5 w-5" />
+            Feedback
+          </Button>
+        </nav>
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <Avatar className="h-8 w-8 bg-primary text-white border border-white/20">
+              <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user.username}</p>
+              <p className="text-xs text-white/50 truncate capitalize">{user.role}</p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10"
+            onClick={() => logout.mutate()}
+          >
+            <LogOut className="mr-2 h-5 w-5" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 md:ml-64 p-6 md:p-8 min-h-screen overflow-y-auto">
+        <header className="md:hidden flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold font-display text-secondary">Admin Panel</h2>
+          <Button variant="ghost" size="icon" onClick={() => logout.mutate()}>
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </header>
+
+        {activeTab === 'overview' ? <OverviewTab /> : <FeedbackTab />}
+      </main>
+    </div>
+  );
+}
+
+function OverviewTab() {
+  const { data: analytics, isLoading } = useAnalytics('week');
+
+  if (isLoading) return <div className="flex justify-center p-12"><div className="animate-spin text-primary">Loading...</div></div>;
+  if (!analytics) return <div>No data available</div>;
+
+  return (
+    <div className="space-y-6 page-transition">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-secondary font-display">Dashboard Overview</h1>
+          <p className="text-muted-foreground">Welcome back, here's what's happening today.</p>
+        </div>
+        <div className="text-sm text-muted-foreground bg-white px-3 py-1 rounded-full shadow-sm">
+          Last 7 Days
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard 
+          title="Total Feedback" 
+          value={analytics.totalFeedback} 
+          icon={MessageSquare}
+          description="+12% from last week"
+          trend="up"
+        />
+        <StatsCard 
+          title="Average Rating" 
+          value={analytics.averageRating.toFixed(1)} 
+          icon={Star}
+          description="Consistent excellence"
+          trend="neutral"
+        />
+        <StatsCard 
+          title="Response Rate" 
+          value={`${analytics.responseRate}%`} 
+          icon={CheckCircle2}
+          description="Feedback acknowledged"
+          trend="up"
+        />
+        <StatsCard 
+          title="Top Category" 
+          value={analytics.topCategory} 
+          icon={TrendingUp}
+          description="Highest rated metric"
+          trend="up"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Weekly Trend Chart */}
+        <div className="bg-white p-6 rounded-3xl shadow-lg border border-border/50">
+          <h3 className="text-lg font-semibold text-secondary mb-4">Rating Trends</h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics.weeklyTrends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+                <XAxis dataKey="date" stroke="#8B4513" fontSize={12} tickFormatter={(val) => format(new Date(val), 'dd MMM')} />
+                <YAxis domain={[0, 5]} stroke="#8B4513" fontSize={12} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+                <Line type="monotone" dataKey="food" stroke="#FF4500" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="service" stroke="#228B22" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="interior" stroke="#8B4513" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF4500]" /> Food</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#228B22]" /> Service</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#8B4513]" /> Interior</span>
+          </div>
+        </div>
+
+        {/* Category Performance */}
+        <div className="bg-white p-6 rounded-3xl shadow-lg border border-border/50">
+          <h3 className="text-lg font-semibold text-secondary mb-4">Category Performance</h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.categoryPerformance} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e5e5" />
+                <XAxis type="number" domain={[0, 5]} hide />
+                <YAxis dataKey="category" type="category" width={80} stroke="#8B4513" fontSize={12} />
+                <Tooltip cursor={{fill: 'transparent'}} />
+                <Bar dataKey="rating" radius={[0, 4, 4, 0]}>
+                  {analytics.categoryPerformance.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.rating > 4 ? '#228B22' : entry.rating > 3 ? '#FFBB28' : '#FF4500'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackTab() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const { data, isLoading } = useFeedback({ page, limit: 10, search });
+  const markContacted = useMarkContacted();
+  const { toast } = useToast();
+
+  const handleMarkContacted = (id: string) => {
+    // In a real app, this might come from the logged-in user context
+    const staffName = "Admin"; 
+    
+    markContacted.mutate({ id, data: { contactedBy: staffName } }, {
+      onSuccess: () => {
+        toast({ title: "Updated", description: "Customer marked as contacted" });
+      },
+      onError: () => {
+        toast({ variant: "destructive", title: "Error", description: "Could not update status" });
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6 page-transition">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-3xl font-bold text-secondary font-display">Customer Feedback</h1>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search name or phone..." 
+            className="pl-9 h-10 rounded-xl bg-white border-none shadow-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-lg border border-border/50 overflow-hidden">
+        <Table>
+          <TableHeader className="bg-secondary/5">
+            <TableRow className="hover:bg-transparent border-b border-secondary/10">
+              <TableHead className="w-[180px] font-semibold text-secondary">Customer</TableHead>
+              <TableHead className="font-semibold text-secondary">Ratings</TableHead>
+              <TableHead className="hidden md:table-cell font-semibold text-secondary">Note</TableHead>
+              <TableHead className="font-semibold text-secondary">Date</TableHead>
+              <TableHead className="text-right font-semibold text-secondary">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-32 text-muted-foreground">Loading...</TableCell>
+              </TableRow>
+            ) : data?.data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-32 text-muted-foreground">No feedback found</TableCell>
+              </TableRow>
+            ) : (
+              data?.data.map((item) => (
+                <TableRow key={item._id} className="hover:bg-secondary/5 border-b border-secondary/5 transition-colors">
+                  <TableCell>
+                    <div className="font-medium text-foreground">{item.name}</div>
+                    <div className="text-xs text-muted-foreground">{item.phoneNumber}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-primary text-primary" />
+                      <span className="font-bold text-primary">
+                        {((item.ratings.food + item.ratings.service + item.ratings.interior + item.ratings.staff + item.ratings.hygiene) / 5).toFixed(1)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell max-w-[200px]">
+                    <span className="truncate block text-sm text-muted-foreground">
+                      {item.note || "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {item.createdAt ? format(item.createdAt, 'MMM d, h:mm a') : '-'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {item.contactedBy ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Contacted
+                      </span>
+                    ) : (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="rounded-lg h-8 border-primary text-primary hover:bg-primary/5">
+                            Contact
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Mark as Contacted</DialogTitle>
+                            <DialogDescription>
+                              Confirm that you have reached out to {item.name} regarding their feedback.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                              <div><span className="font-semibold">Phone:</span> {item.phoneNumber}</div>
+                              <div><span className="font-semibold">Avg Rating:</span> {((item.ratings.food + item.ratings.service + item.ratings.interior + item.ratings.staff + item.ratings.hygiene) / 5).toFixed(1)}</div>
+                            </div>
+                            {item.note && (
+                              <div className="bg-muted/50 p-3 rounded-lg text-sm italic text-muted-foreground">
+                                "{item.note}"
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              onClick={() => handleMarkContacted(item._id)}
+                              disabled={markContacted.isPending}
+                            >
+                              {markContacted.isPending ? "Updating..." : "Confirm Contact"}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        
+        {/* Pagination controls */}
+        {data && data.pagination.pages > 1 && (
+          <div className="p-4 border-t border-secondary/10 flex justify-between items-center">
+             <Button 
+               variant="outline" 
+               size="sm" 
+               onClick={() => setPage(p => Math.max(1, p - 1))}
+               disabled={page === 1}
+               className="rounded-lg"
+             >
+               Previous
+             </Button>
+             <span className="text-sm text-muted-foreground">
+               Page {page} of {data.pagination.pages}
+             </span>
+             <Button 
+               variant="outline" 
+               size="sm" 
+               onClick={() => setPage(p => Math.min(data.pagination.pages, p + 1))}
+               disabled={page === data.pagination.pages}
+               className="rounded-lg"
+             >
+               Next
+             </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
