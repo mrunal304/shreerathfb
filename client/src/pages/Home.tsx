@@ -157,23 +157,7 @@ export default function Home() {
                   {/* Ratings Section */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-secondary font-display">Rate Your Experience</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                      <FormField
-                        control={form.control}
-                        name="ratings.food"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <RatingInput 
-                                label="Food Quality" 
-                                value={field.value} 
-                                onChange={field.onChange} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <div className="grid grid-cols-1 gap-y-6">
                       <FormField
                         control={form.control}
                         name="ratings.service"
@@ -181,7 +165,7 @@ export default function Home() {
                           <FormItem>
                             <FormControl>
                               <RatingInput 
-                                label="Service Speed" 
+                                label="How would you rate the quality of service?" 
                                 value={field.value} 
                                 onChange={field.onChange} 
                               />
@@ -192,28 +176,12 @@ export default function Home() {
                       />
                       <FormField
                         control={form.control}
-                        name="ratings.interior"
+                        name="ratings.food"
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
                               <RatingInput 
-                                label="Ambience & Interior" 
-                                value={field.value} 
-                                onChange={field.onChange} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="ratings.staff"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <RatingInput 
-                                label="Staff Behavior" 
+                                label="How satisfied were you with the food quality?" 
                                 value={field.value} 
                                 onChange={field.onChange} 
                               />
@@ -229,7 +197,39 @@ export default function Home() {
                           <FormItem>
                             <FormControl>
                               <RatingInput 
-                                label="Hygiene & Cleanliness" 
+                                label="How clean and well-maintained was the restaurant?" 
+                                value={field.value} 
+                                onChange={field.onChange} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ratings.interior"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <RatingInput 
+                                label="How would you rate the ambience and atmosphere?" 
+                                value={field.value} 
+                                onChange={field.onChange} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ratings.staff"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <RatingInput 
+                                label="How likely are you to recommend us to others?" 
                                 value={field.value} 
                                 onChange={field.onChange} 
                               />
