@@ -1,0 +1,68 @@
+Build a complete full-stack web application for "Shree Rath" Pure Veg restaurant that manages customer feedback via QR codes. Use the exact orange branding from the restaurant photo.
+
+🎯 CUSTOMER FLOW (Mobile-First):
+1. Customer scans QR → lands on Shree Rath branded feedback form
+2. Enters: Name, Phone number (10-digit Indian format validation: /^9\d{9}$/)
+3. Rates 5 categories (1-5 stars each): Interior, Food, Service, Staff, Hygiene
+4. Optional note textarea (max 500 characters)
+5. Submit → Full-screen "धन्यवाद! Thank you for your feedback!" with orange confetti animation
+6. VALIDATION: Block duplicate submissions from same phone number on same date (YYYY-MM-DD check)
+
+🎯 ADMIN DASHBOARD FLOW:
+1. Login: username "admin", password "admin123" (persistent session)
+2. Dashboard layout with collapsible sidebar:
+   ┌─────────────────┬─────────────────────────────────────┐
+   │ SIDEBAR         │ MAIN CONTENT                        │
+   │ • Dashboard     │ KPIs | Charts | Feedback Table      │
+   │ • Logout        │                                     │
+   └─────────────────┴─────────────────────────────────────┘
+
+KPIs (This Week):
+- Total feedback received
+- Average rating (overall)
+- Top performing category
+- Response rate (% contacted)
+
+Charts (Recharts):
+1. Weekly Rating Trends (line chart: 5 lines for each category)
+2. Category Performance (bar chart comparison)
+3. Feedback Volume (pie: Total/Contacted/Pending)
+
+Data Table (sortable/searchable):
+| Name | Phone | Ratings | Note Preview | Status | Action |
+|------|-------|---------|-------------|--------|--------|
+| Sort by date/phone/rating | Visual ⭐⭐⭐⭐⭐ | First 50 chars | Pending/Contacted | CONTACT button |
+
+Contact button: Copies phone to clipboard + marks as contacted (saves staff name + timestamp)
+
+🛠️ TECHNICAL STACK (MANDATORY):
+BACKEND:
+- Node.js + Express server
+- MongoDB + Mongoose ODM
+
+FRONTEND:
+- React 18 + Vite
+- Tailwind CSS
+- Shadcn UI components
+- TanStack Query (React Query) - 15s polling for live updates
+- Framer Motion animations
+- Recharts for analytics graphs
+
+📊 MONGODB SCHEMA:
+```javascript
+{
+  name: { type: String, required: true },
+  phoneNumber: { type: String, required: true, match: /^9\d{9}$/ },
+  ratings: {
+    interior: { type: Number, min: 1, max: 5 },
+    food: { type: Number, min: 1, max: 5 },
+    service: { type: Number, min: 1, max: 5 },
+    staff: { type: Number, min: 1, max: 5 },
+    hygiene: { type: Number, min: 1, max: 5 }
+  },
+  note: { type: String, maxlength: 500 },
+  createdAt: { type: Date, default: Date.now },
+  contactedAt: Date,
+  contactedBy: String,
+  dateKey: String // "2026-01-28" for daily duplicate check
+}
