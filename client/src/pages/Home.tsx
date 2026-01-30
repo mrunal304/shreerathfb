@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertFeedbackSchema, type InsertFeedback } from "@shared/schema";
 import { useCreateFeedback } from "@/hooks/use-feedback";
@@ -13,10 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Loader2, PartyPopper, UtensilsCrossed, ChefHat, ConciergeBell, Utensils, Sparkles, Building2, ThumbsUp } from "lucide-react";
+import { Loader2, UtensilsCrossed, ChefHat, ConciergeBell, Utensils, Sparkles, Building2, ThumbsUp } from "lucide-react";
 
 export default function Home() {
-  const [submitted, setSubmitted] = useState(false);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const createFeedback = useCreateFeedback();
 
@@ -43,8 +44,7 @@ export default function Home() {
     createFeedback.mutate(data, {
       onSuccess: (response) => {
         console.log("Feedback submitted successfully:", response);
-        setSubmitted(true);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setLocation("/thank-you");
       },
       onError: (error) => {
         console.error("Feedback submission error:", error);
@@ -56,38 +56,6 @@ export default function Home() {
       },
     });
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="absolute top-10 left-10 text-primary animate-bounce delay-100"><UtensilsCrossed size={48} /></div>
-          <div className="absolute top-20 right-20 text-accent animate-bounce delay-300"><ChefHat size={48} /></div>
-          <div className="absolute bottom-10 left-1/4 text-secondary animate-bounce delay-500"><PartyPopper size={48} /></div>
-        </div>
-
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center max-w-md w-full bg-white p-8 rounded-3xl shadow-2xl relative z-10 border-2 border-primary/10"
-        >
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600">
-            <PartyPopper className="w-10 h-10" />
-          </div>
-          <h1 className="text-3xl font-bold font-display text-primary mb-4">Thank You!</h1>
-          <p className="text-secondary/80 text-lg mb-8">
-            We appreciate your feedback. It helps us serve you better. We hope to see you again soon!
-          </p>
-          <Button 
-            onClick={() => window.location.reload()} 
-            className="w-full h-12 text-lg bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 rounded-xl"
-          >
-            Submit Another Response
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#FDF8F3] py-8 px-4 sm:px-6 lg:px-8">
