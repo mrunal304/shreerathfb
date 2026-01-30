@@ -49,6 +49,7 @@ export default function Dashboard() {
   const { data: user, isLoading: userLoading } = useUser();
   const [, setLocation] = useLocation();
   const logout = useLogout();
+  const [activeTab, setActiveTab] = useState<'overview' | 'feedback'>('overview');
   
   if (userLoading) return null;
   if (!user) {
@@ -56,8 +57,6 @@ export default function Dashboard() {
     return null;
   }
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'feedback'>('overview');
-  
   return (
     <div className="min-h-screen bg-[#F5F5DC]/50 flex">
       {/* Sidebar */}
