@@ -23,7 +23,7 @@ interface IFeedback extends Document {
 
 const FeedbackSchema = new Schema<IFeedback>({
   name: { type: String, required: true },
-  phoneNumber: { type: String, required: true, match: /^9\d{9}$/ },
+  phoneNumber: { type: String, required: true, match: /^\d{10}$/ },
   location: { type: String, required: true },
   dineType: { type: String, enum: ["dine_in", "take_out"], required: true },
   ratings: {

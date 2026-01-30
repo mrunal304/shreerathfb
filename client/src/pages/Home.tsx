@@ -46,12 +46,12 @@ export default function Home() {
         console.log("Feedback submitted successfully:", response);
         setLocation("/thank-you");
       },
-      onError: (error) => {
-        console.error("Feedback submission error:", error);
+      onError: (error: any) => {
+        console.error("Feedback submission error full response:", error);
         toast({
           variant: "destructive",
           title: "Submission failed",
-          description: error.message,
+          description: error.response?.data?.message || error.message || "Failed to submit feedback",
         });
       },
     });
