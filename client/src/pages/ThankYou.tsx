@@ -54,17 +54,7 @@ export default function ThankYou() {
         transition={{ duration: 0.6 }}
         className="max-w-2xl w-full"
       >
-        {/* Logo Section */}
-        <div className="flex justify-center mb-6">
-           <div className="bg-white rounded-full p-1 shadow-sm border border-gray-50">
-             <img 
-               src="/attached_assets/Screenshot_2026-01-28_181524_1769770244247.png" 
-               alt="Shree Rath Logo" 
-               className="w-24 h-24 rounded-full object-cover"
-               style={{ clipPath: 'inset(10% 20% 45% 30%)', transform: 'scale(2.5) translate(5%, 15%)' }}
-             />
-           </div>
-        </div>
+        {/* Logo Section - Temporarily Removed */}
 
         {/* Main Heading */}
         <h1 className="text-4xl md:text-5xl font-bold text-[#D32F2F] mb-6">
