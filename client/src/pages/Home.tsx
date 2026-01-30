@@ -265,11 +265,17 @@ export default function Home() {
                   <FormItem>
                     <FormLabel className="text-secondary font-semibold">Additional Comments (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Tell us what you loved or what we can improve..." 
-                        className="min-h-[100px] border border-secondary/20 rounded-lg bg-transparent focus:border-primary resize-none" 
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Textarea 
+                          placeholder="Tell us what you loved or what we can improve..." 
+                          className="min-h-[100px] border border-secondary/20 rounded-lg bg-transparent focus:border-primary resize-none pb-8" 
+                          maxLength={500}
+                          {...field} 
+                        />
+                        <div className="absolute bottom-2 right-3 text-xs text-muted-foreground/60">
+                          {(field.value || "").length}/500
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
