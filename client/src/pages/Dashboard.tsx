@@ -41,7 +41,7 @@ const BarChartTooltip = RechartsTooltip;
 import { format } from "date-fns";
 import { 
   LayoutDashboard, LogOut, Search, User, CheckCircle2, 
-  MessageSquare, Star, TrendingUp, Users, Phone, Eye 
+  MessageSquare, Star, TrendingUp, Users, Phone, Eye, Menu, X 
 } from "lucide-react";
 import {
   Tooltip as ShadcnTooltip,
@@ -54,11 +54,19 @@ import { useLocation } from "wouter";
 
 const COLORS = ['#FF4500', '#228B22', '#FFBB28', '#FF8042', '#8B4513'];
 
+import { 
+  LayoutDashboard, LogOut, Search, User, CheckCircle2, 
+  MessageSquare, Star, TrendingUp, Users, Phone, Eye, Menu, X 
+} from "lucide-react";
+
+// ... existing code ...
+
 export default function Dashboard() {
   const { data: user, isLoading: userLoading } = useUser();
   const [, setLocation] = useLocation();
   const logout = useLogout();
   const [activeTab, setActiveTab] = useState<'overview' | 'feedback'>('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   if (userLoading) return null;
   if (!user) {
@@ -66,57 +74,105 @@ export default function Dashboard() {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-[#F5F5DC]/50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-white hidden md:flex flex-col fixed h-full z-20 shadow-2xl">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold font-display">Admin Panel</h2>
-        </div>
-        <nav className="flex-1 px-4 space-y-2">
-          <Button 
-            variant={activeTab === 'overview' ? 'secondary' : 'ghost'} 
-            className={`w-full justify-start ${activeTab === 'overview' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            <LayoutDashboard className="mr-2 h-5 w-5" />
-            Overview
-          </Button>
-          <Button 
-            variant={activeTab === 'feedback' ? 'secondary' : 'ghost'} 
-            className={`w-full justify-start ${activeTab === 'feedback' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-            onClick={() => setActiveTab('feedback')}
-          >
-            <MessageSquare className="mr-2 h-5 w-5" />
-            Feedback
-          </Button>
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <Avatar className="h-8 w-8 bg-primary text-white border border-white/20">
-              <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user.username}</p>
-              <p className="text-xs text-white/50 truncate capitalize">{user.role}</p>
-            </div>
+  const navItems = (
+    <>
+      <Button 
+        variant={activeTab === 'overview' ? 'secondary' : 'ghost'} 
+        className={`w-full justify-start ${activeTab === 'overview' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+        onClick={() => {
+          setActiveTab('overview');
+          setIsSidebarOpen(false);
+        }}
+      >
+        <LayoutDashboard className="mr-2 h-5 w-5" />
+        Overview
+      </Button>
+      <Button 
+        variant={activeTab === 'feedback' ? 'secondary' : 'ghost'} 
+        className={`w-full justify-start ${activeTab === 'feedback' ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+        onClick={() => {
+          setActiveTab('feedback');
+          setIsSidebarOpen(false);
+        }}
+      >
+        <MessageSquare className="mr-2 h-5 w-5" />
+        Feedback
+      </Button>
+    </>
+  );
+
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold font-display">Admin Panel</h2>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden text-white/70 hover:text-white hover:bg-white/5"
+          onClick={() => setIsSidebarOpen(false)}
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      </div>
+      <nav className="flex-1 px-4 space-y-2">
+        {navItems}
+      </nav>
+      <div className="p-4 border-t border-white/10">
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <Avatar className="h-8 w-8 bg-primary text-white border border-white/20">
+            <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user.username}</p>
+            <p className="text-xs text-white/50 truncate capitalize">{user.role}</p>
           </div>
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10"
-            onClick={() => logout.mutate()}
-          >
-            <LogOut className="mr-2 h-5 w-5" />
-            Sign Out
-          </Button>
         </div>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10"
+          onClick={() => logout.mutate()}
+        >
+          <LogOut className="mr-2 h-5 w-5" />
+          Sign Out
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#F5F5DC]/50 flex relative">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-64 bg-secondary text-white transform transition-transform duration-300 ease-in-out shadow-2xl
+        md:relative md:translate-x-0 
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {sidebarContent}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 p-6 md:p-8 min-h-screen overflow-y-auto">
-        <header className="md:hidden flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold font-display text-secondary">Admin Panel</h2>
-          <Button variant="ghost" size="icon" onClick={() => logout.mutate()}>
+      <main className="flex-1 p-6 md:p-8 min-h-screen overflow-y-auto w-full">
+        <header className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden text-secondary"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+            <h2 className="text-2xl font-bold font-display text-secondary md:hidden">Admin Panel</h2>
+          </div>
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => logout.mutate()}>
             <LogOut className="h-5 w-5" />
           </Button>
         </header>
