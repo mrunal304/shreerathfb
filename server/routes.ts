@@ -37,7 +37,8 @@ export async function registerRoutes(
   passport.use(
     new LocalStrategy((username, password, done) => {
       // Hardcoded admin credentials as requested
-      if (username === "admin" && password === "admin123") {
+      // Note: Updated password to avoid compromise warnings
+      if (username === "admin" && password === "shreerath_admin_2026") {
         return done(null, { id: "admin", username: "admin", role: "admin" });
       }
       return done(null, false, { message: "Invalid credentials" });
