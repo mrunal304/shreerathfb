@@ -32,16 +32,21 @@ export default function Login() {
     },
   });
 
-  const onSubmit = (data: LoginCredentials) => {
-    login.mutate(data, {
-      onError: (error) => {
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: error.message,
-        });
-      },
-    });
+  const onSubmit = async (data: LoginCredentials) => {
+    console.log("Login attempt started", { username: data.username });
+    try {
+      await login.mutateAsync(data);
+      console.log("Login mutation successful");
+      // Explicit redirect with window.location for mobile reliability
+      window.location.href = "/admin";
+    } catch (error: any) {
+      console.error("Login attempt failed", error);
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: error.message || "Invalid credentials",
+      });
+    }
   };
 
   if (isUserLoading || user) return null;

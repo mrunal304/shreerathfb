@@ -26,7 +26,11 @@ export async function registerRoutes(
       store: new SessionStore({
         checkPeriod: 86400000,
       }),
-      cookie: { secure: app.get("env") === "production" },
+      cookie: { 
+        secure: app.get("env") === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      },
     })
   );
 
