@@ -131,8 +131,9 @@ export async function registerRoutes(
 
   app.patch(api.feedback.markContacted.path, requireAuth, async (req, res) => {
     try {
+      const id = req.params.id as string;
       const input = api.feedback.markContacted.input.parse(req.body);
-      const updated = await storage.markContacted(req.params.id, input);
+      const updated = await storage.markContacted(id, input);
       if (!updated) {
         return res.status(404).json({ message: "Feedback not found" });
       }
