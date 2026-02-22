@@ -120,7 +120,7 @@ export class MongoStorage implements IStorage {
     const skip = (filters.page - 1) * filters.limit;
 
     const [data, total] = await Promise.all([
-      FeedbackModel.find(query).sort({ "visits.createdAt": -1 }).skip(skip).limit(filters.limit),
+      FeedbackModel.find(query).sort({ "visits.createdAt": -1 }),
       FeedbackModel.countDocuments(query)
     ]);
 
@@ -239,14 +239,38 @@ export class MongoStorage implements IStorage {
     };
   }
 
-  private mapDocument(doc: IFeedback): Feedback {
+  private mapDocument(doc: any): Feedback {
+    const rawDoc = doc.toObject ? doc.toObject() : doc;
+    
+    // Handle old flat schema by converting it to a visit if visits array is empty
+    let visits = rawDoc.visits || [];
+    if (visits.length === 0 && rawDoc.location) {
+      visits = [{
+        location: rawDoc.location,
+        dineType: rawDoc.dineType || "dine_in",
+        ratings: rawDoc.ratings || {
+          foodQuality: 5,
+          foodTaste: 5,
+          staffBehavior: 5,
+          hygiene: 5,
+          ambience: 5,
+          serviceSpeed: 5
+        },
+        note: rawDoc.note || "",
+        staffName: rawDoc.staffName || "",
+        staffComment: rawDoc.staffComment || "",
+        createdAt: rawDoc.createdAt || new Date(),
+        dateKey: rawDoc.dateKey || (rawDoc.createdAt ? new Date(rawDoc.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+      }];
+    }
+
     return {
-      _id: doc._id.toString(),
-      name: doc.name,
-      phoneNumber: doc.phoneNumber,
-      contactedAt: doc.contactedAt?.toISOString(),
-      contactedBy: doc.contactedBy || null,
-      visits: (doc.visits || []).map(v => ({
+      _id: rawDoc._id.toString(),
+      name: rawDoc.name,
+      phoneNumber: rawDoc.phoneNumber,
+      contactedAt: rawDoc.contactedAt ? (rawDoc.contactedAt instanceof Date ? rawDoc.contactedAt.toISOString() : rawDoc.contactedAt) : undefined,
+      contactedBy: rawDoc.contactedBy || null,
+      visits: visits.map((v: any) => ({
         location: v.location,
         dineType: v.dineType,
         ratings: v.ratings,
@@ -259,7 +283,5 @@ export class MongoStorage implements IStorage {
     };
   }
 }
-
-export const storage = new MongoStorage();
 
 export const storage = new MongoStorage();
