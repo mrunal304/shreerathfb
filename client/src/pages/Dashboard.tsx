@@ -305,6 +305,7 @@ function FeedbackTab() {
           <TableHeader className="bg-secondary/5">
             <TableRow className="hover:bg-transparent border-b border-secondary/10">
               <TableHead className="w-[180px] font-semibold text-secondary">Customer</TableHead>
+              <TableHead className="w-[150px] font-semibold text-secondary">Staff Member</TableHead>
               <TableHead className="font-semibold text-secondary">Ratings</TableHead>
               <TableHead className="hidden md:table-cell font-semibold text-secondary">Note</TableHead>
               <TableHead className="font-semibold text-secondary">Date</TableHead>
@@ -315,11 +316,11 @@ function FeedbackTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-32 text-muted-foreground">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">Loading...</TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-32 text-muted-foreground">No feedback found</TableCell>
+                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">No feedback found</TableCell>
               </TableRow>
             ) : (
               data?.data.map((item) => (
@@ -345,6 +346,9 @@ function FeedbackTab() {
                         </ShadcnTooltip>
                       </TooltipProvider>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm font-medium">{item.staffName || "-"}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -469,6 +473,12 @@ function FeedbackTab() {
                               </div>
                             </div>
                           </div>
+                          {item.staffComment && (
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                              <h4 className="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-2">Staff Feedback: {item.staffName}</h4>
+                              <p className="text-secondary italic">"{item.staffComment}"</p>
+                            </div>
+                          )}
                           {item.note && (
                             <div className="bg-[#FFF8E1] p-4 rounded-xl border border-[#FFF3E0]">
                               <h4 className="text-sm font-semibold text-[#A1887F] uppercase tracking-wider mb-2">Additional Comments</h4>

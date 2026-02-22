@@ -29,6 +29,8 @@ export default function Home() {
       location: "",
       dineType: "dine_in",
       note: "",
+      staffName: "",
+      staffComment: "",
       ratings: {
         foodQuality: 0,
         foodTaste: 0,
@@ -273,6 +275,52 @@ export default function Home() {
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="pt-4 space-y-6">
+                <h3 className="text-lg font-semibold text-secondary font-display mb-4">Staff Feedback (Optional)</h3>
+                
+                <FormField
+                  control={form.control}
+                  name="staffName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-secondary font-semibold">Name of Staff Who Served You</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter the name of your waiter/staff" 
+                          className="h-12 border-b border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-secondary/20 focus-visible:ring-0 focus:border-primary px-0 shadow-none focus:outline-none" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="staffComment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-secondary font-semibold">Your experience with this staff member</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Textarea 
+                            placeholder="Tell us how they served you..." 
+                            className="min-h-[80px] border-b border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-secondary/20 focus-visible:ring-0 focus:border-primary px-0 shadow-none resize-none pb-8 focus:outline-none" 
+                            maxLength={500}
+                            {...field} 
+                          />
+                          <div className="absolute bottom-2 right-3 text-xs text-muted-foreground/60">
+                            {(field.value || "").length}/500
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField

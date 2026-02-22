@@ -16,6 +16,8 @@ interface IFeedback extends Document {
     serviceSpeed: number;
   };
   note?: string;
+  staffName?: string;
+  staffComment?: string;
   createdAt: Date;
   contactedAt?: Date;
   contactedBy?: string;
@@ -36,6 +38,8 @@ const FeedbackSchema = new Schema<IFeedback>({
     serviceSpeed: { type: Number, min: 1, max: 5, required: true }
   },
   note: { type: String, maxlength: 500, default: "" },
+  staffName: { type: String, default: "" },
+  staffComment: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now },
   contactedAt: Date,
   contactedBy: String,
@@ -75,7 +79,8 @@ export class MongoStorage implements IStorage {
     if (filters.search) {
       query.$or = [
         { name: { $regex: filters.search, $options: 'i' } },
-        { phoneNumber: { $regex: filters.search, $options: 'i' } }
+        { phoneNumber: { $regex: filters.search, $options: 'i' } },
+        { staffName: { $regex: filters.search, $options: 'i' } }
       ];
     }
 
@@ -238,6 +243,8 @@ export class MongoStorage implements IStorage {
       dineType: obj.dineType || "dine_in",
       ratings: obj.ratings,
       note: obj.note || "",
+      staffName: obj.staffName || "",
+      staffComment: obj.staffComment || "",
       createdAt: doc.createdAt.toISOString(),
       contactedAt: doc.contactedAt?.toISOString(),
       contactedBy: obj.contactedBy || null,

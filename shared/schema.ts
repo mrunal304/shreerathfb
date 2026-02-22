@@ -22,6 +22,8 @@ export const feedbackSchema = z.object({
   contactedAt: z.string().or(z.date()).nullable().optional(),
   contactedBy: z.string().nullable().optional(),
   dateKey: z.string().optional(), // For duplicate checking (YYYY-MM-DD)
+  staffName: z.string().optional().default(""),
+  staffComment: z.string().optional().default(""),
 });
 
 export const insertFeedbackSchema = feedbackSchema.pick({
@@ -31,6 +33,8 @@ export const insertFeedbackSchema = feedbackSchema.pick({
   dineType: true,
   ratings: true,
   note: true,
+  staffName: true,
+  staffComment: true,
 });
 
 // Admin Auth Schema
