@@ -8,11 +8,12 @@ interface IFeedback extends Document {
   location: string;
   dineType: "dine_in" | "take_out";
   ratings: {
-    interior: number;
-    food: number;
-    service: number;
-    staff: number;
+    foodQuality: number;
+    foodTaste: number;
+    staffBehavior: number;
     hygiene: number;
+    ambience: number;
+    serviceSpeed: number;
   };
   note?: string;
   createdAt: Date;
@@ -27,11 +28,12 @@ const FeedbackSchema = new Schema<IFeedback>({
   location: { type: String, required: true },
   dineType: { type: String, enum: ["dine_in", "take_out"], required: true },
   ratings: {
-    interior: { type: Number, min: 1, max: 5, required: true },
-    food: { type: Number, min: 1, max: 5, required: true },
-    service: { type: Number, min: 1, max: 5, required: true },
-    staff: { type: Number, min: 1, max: 5, required: true },
-    hygiene: { type: Number, min: 1, max: 5, required: true }
+    foodQuality: { type: Number, min: 1, max: 5, required: true },
+    foodTaste: { type: Number, min: 1, max: 5, required: true },
+    staffBehavior: { type: Number, min: 1, max: 5, required: true },
+    hygiene: { type: Number, min: 1, max: 5, required: true },
+    ambience: { type: Number, min: 1, max: 5, required: true },
+    serviceSpeed: { type: Number, min: 1, max: 5, required: true }
   },
   note: { type: String, maxlength: 500, default: "" },
   createdAt: { type: Date, default: Date.now },
@@ -133,31 +135,42 @@ export class MongoStorage implements IStorage {
           _id: null,
           total: { $sum: 1 },
           contacted: { $sum: { $cond: [{ $ifNull: ["$contactedAt", false] }, 1, 0] } },
-          avgInterior: { $avg: "$ratings.interior" },
-          avgFood: { $avg: "$ratings.food" },
-          avgService: { $avg: "$ratings.service" },
-          avgStaff: { $avg: "$ratings.staff" },
+          avgFoodQuality: { $avg: "$ratings.foodQuality" },
+          avgFoodTaste: { $avg: "$ratings.foodTaste" },
+          avgStaffBehavior: { $avg: "$ratings.staffBehavior" },
           avgHygiene: { $avg: "$ratings.hygiene" },
+          avgAmbience: { $avg: "$ratings.ambience" },
+          avgServiceSpeed: { $avg: "$ratings.serviceSpeed" },
         }
       }
     ]);
 
-    const result = stats[0] || { total: 0, contacted: 0, avgInterior: 0, avgFood: 0, avgService: 0, avgStaff: 0, avgHygiene: 0 };
-    
-    // Calculate Average Rating Overall
-    const categories = ['interior', 'food', 'service', 'staff', 'hygiene'];
-    const averages = {
-      interior: result.avgInterior || 0,
-      food: result.avgFood || 0,
-      service: result.avgService || 0,
-      staff: result.avgStaff || 0,
-      hygiene: result.avgHygiene || 0,
+    const result = stats[0] || { 
+      total: 0, 
+      contacted: 0, 
+      avgFoodQuality: 0, 
+      avgFoodTaste: 0, 
+      avgStaffBehavior: 0, 
+      avgHygiene: 0,
+      avgAmbience: 0,
+      avgServiceSpeed: 0
     };
     
-    const overallAvg = (averages.interior + averages.food + averages.service + averages.staff + averages.hygiene) / 5;
-    
+    // Calculate Average Rating Overall
+    const categories = ['foodQuality', 'foodTaste', 'staffBehavior', 'hygiene', 'ambience', 'serviceSpeed'];
+    const averages = {
+      foodQuality: result.avgFoodQuality || 0,
+      foodTaste: result.avgFoodTaste || 0,
+      staffBehavior: result.avgStaffBehavior || 0,
+      hygiene: result.avgHygiene || 0,
+      ambience: result.avgAmbience || 0,
+      serviceSpeed: result.avgServiceSpeed || 0,
+    };
+
+    const overallAvg = (averages.foodQuality + averages.foodTaste + averages.staffBehavior + averages.hygiene + averages.ambience + averages.serviceSpeed) / 6;
+
     // Find top category
-    let topCategory = 'food';
+    let topCategory = 'foodQuality';
     let maxVal = -1;
     for (const [cat, val] of Object.entries(averages)) {
       if (val > maxVal) {
@@ -174,11 +187,12 @@ export class MongoStorage implements IStorage {
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          interior: { $avg: "$ratings.interior" },
-          food: { $avg: "$ratings.food" },
-          service: { $avg: "$ratings.service" },
-          staff: { $avg: "$ratings.staff" },
+          foodQuality: { $avg: "$ratings.foodQuality" },
+          foodTaste: { $avg: "$ratings.foodTaste" },
+          staffBehavior: { $avg: "$ratings.staffBehavior" },
           hygiene: { $avg: "$ratings.hygiene" },
+          ambience: { $avg: "$ratings.ambience" },
+          serviceSpeed: { $avg: "$ratings.serviceSpeed" },
         }
       },
       { $sort: { _id: 1 } }
@@ -200,14 +214,15 @@ export class MongoStorage implements IStorage {
       totalFeedback: result.total,
       averageRating: Number(overallAvg.toFixed(1)),
       responseRate: result.total > 0 ? Math.round((result.contacted / result.total) * 100) : 0,
-      topCategory: topCategory.charAt(0).toUpperCase() + topCategory.slice(1),
+      topCategory: topCategory.replace(/([A-Z])/g, ' $1').trim().toLowerCase(),
       weeklyTrends: trends.map(t => ({
         date: t._id,
-        interior: Number(t.interior.toFixed(1)),
-        food: Number(t.food.toFixed(1)),
-        service: Number(t.service.toFixed(1)),
-        staff: Number(t.staff.toFixed(1)),
+        foodQuality: Number(t.foodQuality.toFixed(1)),
+        foodTaste: Number(t.foodTaste.toFixed(1)),
+        staffBehavior: Number(t.staffBehavior.toFixed(1)),
         hygiene: Number(t.hygiene.toFixed(1)),
+        ambience: Number(t.ambience.toFixed(1)),
+        serviceSpeed: Number(t.serviceSpeed.toFixed(1)),
       })),
       categoryPerformance,
       feedbackVolume

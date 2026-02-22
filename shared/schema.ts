@@ -10,11 +10,12 @@ export const feedbackSchema = z.object({
   location: z.string().min(1, "Location is required"),
   dineType: z.enum(["dine_in", "take_out"]),
   ratings: z.object({
-    interior: z.number().min(1).max(5),
-    food: z.number().min(1).max(5),
-    service: z.number().min(1).max(5),
-    staff: z.number().min(1).max(5),
+    foodQuality: z.number().min(1).max(5),
+    foodTaste: z.number().min(1).max(5),
+    staffBehavior: z.number().min(1).max(5),
     hygiene: z.number().min(1).max(5),
+    ambience: z.number().min(1).max(5),
+    serviceSpeed: z.number().min(1).max(5),
   }),
   note: z.string().max(500, "Note cannot exceed 500 characters").optional().default(""),
   createdAt: z.string().or(z.date()).optional(), // Date as ISO string from API
@@ -56,11 +57,12 @@ export type AnalyticsData = {
   topCategory: string;
   weeklyTrends: Array<{
     date: string;
-    interior: number;
-    food: number;
-    service: number;
-    staff: number;
+    foodQuality: number;
+    foodTaste: number;
+    staffBehavior: number;
     hygiene: number;
+    ambience: number;
+    serviceSpeed: number;
   }>;
   categoryPerformance: Array<{
     category: string;

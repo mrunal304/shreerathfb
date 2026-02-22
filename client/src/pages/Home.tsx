@@ -30,11 +30,12 @@ export default function Home() {
       dineType: "dine_in",
       note: "",
       ratings: {
-        food: 0,
-        service: 0,
-        interior: 0,
-        staff: 0,
+        foodQuality: 0,
+        foodTaste: 0,
+        staffBehavior: 0,
         hygiene: 0,
+        ambience: 0,
+        serviceSpeed: 0,
       },
     },
   });
@@ -171,15 +172,15 @@ export default function Home() {
                 <div className="space-y-2 divide-y divide-secondary/10">
                   <FormField
                     control={form.control}
-                    name="ratings.service"
+                    name="ratings.foodQuality"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <RatingInput 
-                            label="How would you rate the quality of service?" 
+                            label="How would you rate the quality of food?" 
                             value={field.value} 
                             onChange={field.onChange}
-                            icon={ConciergeBell}
+                            icon={Utensils}
                           />
                         </FormControl>
                         <FormMessage />
@@ -188,15 +189,32 @@ export default function Home() {
                   />
                   <FormField
                     control={form.control}
-                    name="ratings.food"
+                    name="ratings.foodTaste"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <RatingInput 
-                            label="How satisfied were you with the food quality?" 
+                            label="Did the taste of food meet your expectations?" 
                             value={field.value} 
                             onChange={field.onChange}
-                            icon={Utensils}
+                            icon={ChefHat}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="ratings.staffBehavior"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <RatingInput 
+                            label="Was our staff behavior polite and helpful?" 
+                            value={field.value} 
+                            onChange={field.onChange}
+                            icon={ThumbsUp}
                           />
                         </FormControl>
                         <FormMessage />
@@ -210,7 +228,7 @@ export default function Home() {
                       <FormItem>
                         <FormControl>
                           <RatingInput 
-                            label="How clean and well-maintained was the restaurant?" 
+                            label="How clean and hygienic did you find our restaurant?" 
                             value={field.value} 
                             onChange={field.onChange}
                             icon={Sparkles}
@@ -222,12 +240,12 @@ export default function Home() {
                   />
                   <FormField
                     control={form.control}
-                    name="ratings.interior"
+                    name="ratings.ambience"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <RatingInput 
-                            label="How would you rate the ambience and atmosphere?" 
+                            label="How would you rate the ambience & atmosphere?" 
                             value={field.value} 
                             onChange={field.onChange}
                             icon={Building2}
@@ -239,15 +257,15 @@ export default function Home() {
                   />
                   <FormField
                     control={form.control}
-                    name="ratings.staff"
+                    name="ratings.serviceSpeed"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <RatingInput 
-                            label="How likely are you to recommend us to others?" 
+                            label="Was the speed of service satisfying?" 
                             value={field.value} 
                             onChange={field.onChange}
-                            icon={ThumbsUp}
+                            icon={ConciergeBell}
                           />
                         </FormControl>
                         <FormMessage />

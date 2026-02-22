@@ -228,16 +228,16 @@ function OverviewTab() {
                 <LineChartTooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
-                <Line type="monotone" dataKey="food" stroke="#FF4500" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="service" stroke="#228B22" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="interior" stroke="#8B4513" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="foodQuality" stroke="#FF4500" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="serviceSpeed" stroke="#228B22" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="ambience" stroke="#8B4513" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
           <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF4500]" /> Food</span>
-            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#228B22]" /> Service</span>
-            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#8B4513]" /> Interior</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF4500]" /> Food Quality</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#228B22]" /> Service Speed</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#8B4513]" /> Ambience</span>
           </div>
         </div>
 
@@ -350,7 +350,7 @@ function FeedbackTab() {
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-primary text-primary" />
                       <span className="font-bold text-primary">
-                        {((item.ratings.food + item.ratings.service + item.ratings.interior + item.ratings.staff + item.ratings.hygiene) / 5).toFixed(1)}
+                        {((item.ratings.foodQuality + item.ratings.foodTaste + item.ratings.staffBehavior + item.ratings.hygiene + item.ratings.ambience + item.ratings.serviceSpeed) / 6).toFixed(1)}
                       </span>
                     </div>
                   </TableCell>
@@ -384,7 +384,7 @@ function FeedbackTab() {
                           <div className="py-4">
                             <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                               <div><span className="font-semibold">Phone:</span> {item.phoneNumber}</div>
-                              <div><span className="font-semibold">Avg Rating:</span> {((item.ratings.food + item.ratings.service + item.ratings.interior + item.ratings.staff + item.ratings.hygiene) / 5).toFixed(1)}</div>
+                              <div><span className="font-semibold">Avg Rating:</span> {((item.ratings.foodQuality + item.ratings.foodTaste + item.ratings.staffBehavior + item.ratings.hygiene + item.ratings.ambience + item.ratings.serviceSpeed) / 6).toFixed(1)}</div>
                             </div>
                             {item.note && (
                               <div className="bg-muted/50 p-3 rounded-lg text-sm italic text-muted-foreground">
@@ -463,7 +463,7 @@ function FeedbackTab() {
                                 <div className="pt-2 border-t flex items-center justify-between font-bold">
                                   <span>Average Rating</span>
                                   <span className="text-primary text-lg">
-                                    {((item.ratings.food + item.ratings.service + item.ratings.interior + item.ratings.staff + item.ratings.hygiene) / 5).toFixed(1)}
+                                    {((item.ratings.foodQuality + item.ratings.foodTaste + item.ratings.staffBehavior + item.ratings.hygiene + item.ratings.ambience + item.ratings.serviceSpeed) / 6).toFixed(1)}
                                   </span>
                                 </div>
                               </div>
