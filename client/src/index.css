@@ -76,16 +76,19 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Remove focus styles from form elements */
+/* Focus styles for form elements */
 input:focus, 
 select:focus, 
 textarea:focus,
+.focus\:border-primary:focus {
+  outline: 2px solid #FF4500 !important;
+  outline-offset: 2px !important;
+  border-color: #FF4500 !important;
+}
+
 [data-radix-collection-item]:focus,
-.focus\:ring-2:focus,
 .focus-visible\:ring-2:focus {
-  outline: none !important;
-  border-color: inherit !important;
-  box-shadow: none !important;
-  --tw-ring-offset-width: 0px !important;
+  outline: 2px solid #FF4500 !important;
+  outline-offset: 2px !important;
   --tw-ring-width: 0px !important;
 }
