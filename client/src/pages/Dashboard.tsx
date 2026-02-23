@@ -489,7 +489,6 @@ function FeedbackTab() {
                 );
               })
             )}
-            )}
           </TableBody>
         </Table>
         
