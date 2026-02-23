@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFeedback, useMarkContacted } from "@/hooks/use-feedback";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -27,9 +27,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   LineChart, Line, Cell, Tooltip as RechartsTooltip 
 } from "recharts";
-import { format } from "date-fns";
+import { format, subDays, startOfToday, startOfYesterday } from "date-fns";
 import { 
-  LayoutDashboard, LogOut, Search, Star, TrendingUp, Phone, Eye, Menu, X, CheckCircle2, MessageSquare
+  LayoutDashboard, LogOut, Search, Star, TrendingUp, Phone, Eye, Menu, X, CheckCircle2, MessageSquare, Calendar as CalendarIcon
 } from "lucide-react";
 import {
   Tooltip as ShadcnTooltip,
@@ -268,8 +268,16 @@ function OverviewTab() {
 function FeedbackTab() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  
   const queryClient = useQueryClient();
-  const { data, isLoading, isFetching, refetch } = useFeedback({ page, limit: 10, search });
+  const { data, isLoading, isFetching, refetch } = useFeedback({ 
+    page, 
+    limit: 10, 
+    search,
+    date: dateKey 
+  });
   const markContacted = useMarkContacted();
   const { toast } = useToast();
 
@@ -290,6 +298,9 @@ function FeedbackTab() {
       }
     });
   };
+
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(startOfToday(), 'yyyy-MM-dd');
+  const isYesterday = format(selectedDate, 'yyyy-MM-dd') === format(startOfYesterday(), 'yyyy-MM-dd');
 
   return (
     <div className="space-y-6 page-transition">
@@ -318,12 +329,57 @@ function FeedbackTab() {
         </div>
       </div>
 
+      {/* Date Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+              <Input
+                type="date"
+                value={format(selectedDate, 'yyyy-MM-dd')}
+                onChange={(e) => e.target.value && setSelectedDate(new Date(e.target.value))}
+                className="pl-9 h-10 w-[180px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary"
+              />
+            </div>
+            <Button
+              variant={isToday ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedDate(startOfToday())}
+              className={`rounded-xl h-10 px-6 font-semibold transition-all ${
+                isToday 
+                ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90" 
+                : "bg-white border-none shadow-sm hover:bg-secondary/5 text-secondary"
+              }`}
+            >
+              Today
+            </Button>
+            <Button
+              variant={isYesterday ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedDate(startOfYesterday())}
+              className={`rounded-xl h-10 px-6 font-semibold transition-all ${
+                isYesterday 
+                ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90" 
+                : "bg-white border-none shadow-sm hover:bg-secondary/5 text-secondary"
+              }`}
+            >
+              Yesterday
+            </Button>
+          </div>
+        </div>
+        <div className="text-sm font-medium text-secondary bg-secondary/5 px-4 py-2 rounded-xl">
+          Showing feedback for: <span className="text-primary font-bold">{format(selectedDate, 'dd MMM yyyy')}</span>
+        </div>
+      </div>
+
       <div className="bg-white rounded-3xl shadow-lg border border-border/50 overflow-hidden">
         <Table>
           <TableHeader className="bg-secondary/5">
             <TableRow className="hover:bg-transparent border-b border-secondary/10">
               <TableHead className="w-[180px] font-semibold text-secondary">Customer</TableHead>
-              <TableHead className="w-[150px] font-semibold text-secondary">Staff Member</TableHead>
+              <TableHead className="w-[150px] font-semibold text-secondary">Visit Info</TableHead>
               <TableHead className="font-semibold text-secondary">Ratings</TableHead>
               <TableHead className="hidden md:table-cell font-semibold text-secondary">Note</TableHead>
               <TableHead className="font-semibold text-secondary">Date</TableHead>
@@ -338,7 +394,7 @@ function FeedbackTab() {
               </TableRow>
             ) : !data || data.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">No feedback submitted yet</TableCell>
+                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">No feedback found for this date.</TableCell>
               </TableRow>
             ) : (
               data.data.map((item) => {

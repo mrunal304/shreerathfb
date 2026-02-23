@@ -117,6 +117,10 @@ export class MongoStorage implements IStorage {
       ];
     }
 
+    if (filters.date) {
+      query["visits.dateKey"] = filters.date;
+    }
+
     const skip = (filters.page - 1) * filters.limit;
 
     const [data, total] = await Promise.all([
@@ -124,9 +128,19 @@ export class MongoStorage implements IStorage {
       FeedbackModel.countDocuments(query)
     ]);
 
+    let results = data.map(doc => this.mapDocument(doc));
+    
+    // If filtering by date, we should also filter the visits within each feedback document
+    if (filters.date) {
+      results = results.map(feedback => ({
+        ...feedback,
+        visits: feedback.visits.filter(v => v.dateKey === filters.date)
+      })).filter(feedback => feedback.visits.length > 0);
+    }
+
     return {
-      data: data.map(doc => this.mapDocument(doc)),
-      total
+      data: results.slice(skip, skip + filters.limit),
+      total: filters.date ? results.length : total
     };
   }
 
