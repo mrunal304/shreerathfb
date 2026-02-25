@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Loader2, UtensilsCrossed, ChefHat, ConciergeBell, Utensils, Sparkles, Building2, ThumbsUp } from "lucide-react";
+import logoPng from "@assets/WhatsApp_Image_2026-02-07_at_10.54.29-removebg-preview_1772010658409.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -61,12 +62,31 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FDF6EF] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-xl mx-auto">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center mb-8 text-center"
+        >
+          <img 
+            src={logoPng} 
+            alt="Shree Rath Logo" 
+            className="h-20 sm:h-24 w-auto mb-4 object-contain brightness-0 invert"
+          />
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#C84B0F] font-serif mb-1">
+            Shree Rath
+          </h2>
+          <p className="text-lg text-[#7A4A2A] font-medium opacity-90">
+            Pure Veg Restaurant
+          </p>
+        </motion.div>
+
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
           className="bg-white rounded-2xl shadow-lg p-6 sm:p-8"
         >
           <div className="mb-8">
