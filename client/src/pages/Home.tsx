@@ -385,7 +385,7 @@ export default function Home() {
         </motion.div>
         
         <p className="text-center text-secondary/40 text-sm mt-8 pb-4">
-          © {new Date().getFullYear()} Restaurant Name. All rights reserved.
+          © {new Date().getFullYear()} Shree Rath Restaurant. Powered by Vyuhx Technologies
         </p>
       </div>
     </div>
