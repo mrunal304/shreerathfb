@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Loader2, UtensilsCrossed, ChefHat, ConciergeBell, Utensils, Sparkles, Building2, ThumbsUp } from "lucide-react";
-import logoPng from "@assets/WhatsApp_Image_2026-02-07_at_10.54.29-removebg-preview_1772010658409.png";
+import logoPng from "@assets/shreerath_logo_brown-removebg-preview_1772012002969.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -73,13 +73,12 @@ export default function Home() {
           <img 
             src={logoPng} 
             alt="Shree Rath Logo" 
-            className="h-20 sm:h-24 w-auto mb-4 object-contain brightness-0 invert"
+            className="h-20 w-auto mb-4 object-contain"
           />
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#C84B0F] font-serif mb-1">
-            Shree Rath
-          </h2>
-          <p className="text-lg text-[#7A4A2A] font-medium opacity-90">
-            Pure Veg Restaurant
+          <p className="text-[20px] sm:text-[22px] text-[#5C3317] centered leading-tight">
+            <span className="font-bold">Shree Rath</span>
+            <span className="mx-2 text-[#C84B0F]">—</span>
+            <span>Pure Veg Restaurant</span>
           </p>
         </motion.div>
 
