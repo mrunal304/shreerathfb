@@ -34,6 +34,8 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+app.get("/health", (_req, res) => res.send("OK"));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
