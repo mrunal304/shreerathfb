@@ -62,8 +62,8 @@ const VisitSchema = new Schema<IVisit>({
     serviceSpeed: { type: Number, min: 1, max: 5, required: true }
   },
   note: { type: String, maxlength: 500, default: "" },
-  staffName: { type: String, default: "" },
-  staffComment: { type: String, default: "" },
+  staffName: { type: String, required: true },
+  staffComment: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   dateKey: { type: String, required: true }
 });

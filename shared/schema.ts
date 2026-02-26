@@ -17,7 +17,7 @@ export const visitSchema = z.object({
   }),
   note: z.string().max(500, "Note cannot exceed 500 characters").optional().default(""),
   staffName: z.string().min(1, "Staff name is required"),
-  staffComment: z.string().optional().default(""),
+  staffComment: z.string().min(1, "Staff comment is required"),
   createdAt: z.string().or(z.date()).optional(),
   dateKey: z.string().optional(),
 });
@@ -56,7 +56,7 @@ export const insertFeedbackSchema = z.object({
   }),
   note: z.string().max(500, "Note cannot exceed 500 characters").optional().default(""),
   staffName: z.string().min(1, "Staff name is required"),
-  staffComment: z.string().optional().default(""),
+  staffComment: z.string().min(1, "Staff comment is required"),
 });
 
 // Admin Auth Schema
