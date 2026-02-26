@@ -15,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Loader2, UtensilsCrossed, ChefHat, ConciergeBell, Utensils, Sparkles, Building2, ThumbsUp } from "lucide-react";
-import logoPng from "@assets/shreerath_logo_brown-removebg-preview_1772012002969.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -71,7 +70,7 @@ export default function Home() {
           className="flex flex-col items-center mb-8 text-center"
         >
           <img 
-            src={logoPng} 
+            src="/shreerath-logo.png" 
             alt="Shree Rath Logo" 
             className="h-20 w-auto mb-4 object-contain"
           />

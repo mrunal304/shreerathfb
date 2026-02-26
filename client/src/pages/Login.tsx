@@ -11,7 +11,6 @@ import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useUser } from "@/hooks/use-auth";
-import logoPngPath from "@assets/shreerath_logo_brown-removebg-preview_1772012426325.png";
 
 export default function Login() {
   const { data: user, isLoading: isUserLoading } = useUser();
@@ -57,7 +56,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img 
-            src={logoPngPath} 
+            src="/shreerath-logo.png" 
             alt="Shree Rath Logo" 
             className="h-[80px] mx-auto mb-4 object-contain bg-transparent"
           />
