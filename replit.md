@@ -30,7 +30,7 @@ Preferred communication style: Simple, everyday language.
 - **Runtime**: Node.js with Express 5
 - **Database**: MongoDB with Mongoose ODM (connection via MONGODB_URI environment variable)
 - **Session Management**: Express-session with MemoryStore for development
-- **Authentication**: Passport.js with Local Strategy (hardcoded admin credentials: username "admin", password "admin123")
+- **Authentication**: Passport.js with Local Strategy (hardcoded admin credentials: username "admin", password "shreerath_admin_2026")
 - **API Design**: RESTful endpoints under `/api/*` prefix with Zod schema validation
 
 ### Data Storage
@@ -40,9 +40,9 @@ Preferred communication style: Simple, everyday language.
 - **Key Collections**: Feedback (with compound unique index on phoneNumber + dateKey for duplicate prevention)
 
 ### Authentication & Authorization
-- Session-based authentication using Passport.js
-- Admin-only access to dashboard routes
-- Persistent sessions via express-session
+- **Session-based authentication using Passport.js**
+- **Admin-only access to dashboard routes**
+- **Persistent sessions via express-session**
 
 ### Build System
 - **Development**: tsx for TypeScript execution, Vite dev server with HMR
@@ -58,21 +58,22 @@ Preferred communication style: Simple, everyday language.
 
 ### Database
 - **MongoDB**: Primary data store (requires MONGODB_URI environment variable)
-- **Drizzle Config**: Present but configured for PostgreSQL - the actual implementation uses MongoDB/Mongoose
+- **Drizzle Config**: Present but implementation uses MongoDB/Mongoose.
 
 ### Third-Party Libraries
 - **UI**: Radix UI primitives, Lucide React icons, Embla Carousel
 - **Data Visualization**: Recharts
 - **Date Handling**: date-fns
-- **Validation**: Zod with drizzle-zod integration
+- **Validation**: Zod
 - **Animation**: Framer Motion, react-confetti
 
 ### Environment Variables Required
 - `MONGODB_URI`: MongoDB connection string
-- `SESSION_SECRET`: Optional, defaults to "shree-rath-secret"
-- `DATABASE_URL`: Referenced in drizzle.config.ts but MongoDB is the actual database
+- `SESSION_SECRET`: Session signing secret
+- `PORT`: Port to listen on (defaults to 5000)
 
-### Replit-Specific Integrations
-- `@replit/vite-plugin-runtime-error-modal`: Error overlay for development
-- `@replit/vite-plugin-cartographer`: Development tooling
-- `@replit/vite-plugin-dev-banner`: Development banner
+## Current Status
+- Project imported and configured.
+- `tsx` installed and dev server running.
+- MongoDB connection verified.
+- App is responding correctly on port 5000.
