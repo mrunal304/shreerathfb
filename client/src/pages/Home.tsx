@@ -304,7 +304,7 @@ export default function Home() {
                   name="staffName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-secondary font-semibold">Name of Staff Who Served You</FormLabel>
+                      <FormLabel className="text-secondary font-semibold">Name of Staff Who Served You <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Enter the name of your waiter/staff" 
@@ -322,7 +322,7 @@ export default function Home() {
                   name="staffComment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-secondary font-semibold">Your experience with this staff member</FormLabel>
+                      <FormLabel className="text-secondary font-semibold">Your experience with this staff member <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Textarea 

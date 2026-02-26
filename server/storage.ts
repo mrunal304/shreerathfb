@@ -70,7 +70,7 @@ const VisitSchema = new Schema<IVisit>({
 
 const FeedbackSchema = new Schema<IFeedback>({
   name: { type: String, required: true },
-  phoneNumber: { type: String, required: true, match: /^\d{10}$/ },
+  phoneNumber: { type: String, required: true },
   visits: [VisitSchema],
   contactedAt: Date,
   contactedBy: String,
