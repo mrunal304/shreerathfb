@@ -89,8 +89,8 @@ export async function registerRoutes(
   app.post(api.feedback.create.path, async (req, res) => {
     try {
       const input = api.feedback.create.input.parse(req.body);
-      const feedback = await storage.createFeedback(input);
-      res.status(201).json(feedback);
+      const result = await storage.createFeedback(input);
+      res.status(201).json(result);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({

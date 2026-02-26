@@ -45,9 +45,10 @@ export default function Home() {
   const onSubmit = (data: InsertFeedback) => {
     console.log("Submitting feedback:", data);
     createFeedback.mutate(data, {
-      onSuccess: (response) => {
+      onSuccess: (response: any) => {
         console.log("Feedback submitted successfully:", response);
-        setLocation("/thank-you");
+        const visits = response.customerCard?.totalVisits || "";
+        setLocation(`/thank-you${visits ? `?visits=${visits}` : ""}`);
       },
       onError: (error: any) => {
         console.error("Feedback submission error full response:", error);

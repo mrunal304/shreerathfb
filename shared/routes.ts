@@ -27,7 +27,14 @@ export const api = {
       path: '/api/feedback',
       input: insertFeedbackSchema,
       responses: {
-        201: feedbackSchema.extend({ _id: objectIdSchema }),
+        201: z.object({
+          feedback: feedbackSchema.extend({ _id: objectIdSchema }),
+          customerCard: z.object({
+            totalVisits: z.number(),
+            firstVisitDate: z.string(),
+            lastVisitDate: z.string(),
+          }).nullable(),
+        }),
         400: errorSchemas.validation,
         409: errorSchemas.conflict, // For duplicate submissions
       },

@@ -147,7 +147,14 @@ export class MongoStorage implements IStorage {
       await customerCard.save();
     }
 
-    return this.mapDocument(feedback);
+    return {
+      feedback: this.mapDocument(feedback),
+      customerCard: customerCard ? {
+        totalVisits: customerCard.totalVisits,
+        firstVisitDate: customerCard.firstVisitDate.toISOString(),
+        lastVisitDate: customerCard.lastVisitDate.toISOString(),
+      } : null
+    };
   }
 
   async getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: Feedback[]; total: number }> {
