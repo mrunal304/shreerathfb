@@ -1,7 +1,29 @@
-import { Feedback, InsertFeedback, ContactUpdate, AnalyticsData, Visit } from "@shared/schema";
+import { Feedback, InsertFeedback, ContactUpdate, AnalyticsData, Visit, CustomerCard } from "@shared/schema";
 import mongoose, { Schema, Document } from "mongoose";
 
 // Mongoose Schema Definition
+interface ICustomerCard extends Document {
+  phoneNumber: string;
+  name: string;
+  totalVisits: number;
+  firstVisitDate: Date;
+  lastVisitDate: Date;
+  visits: mongoose.Types.ObjectId[];
+}
+
+const CustomerCardSchema = new Schema<ICustomerCard>({
+  phoneNumber: { type: String, required: true, match: /^\d{10}$/ },
+  name: { type: String, required: true },
+  totalVisits: { type: Number, required: true, default: 1 },
+  firstVisitDate: { type: Date, required: true, default: Date.now },
+  lastVisitDate: { type: Date, required: true, default: Date.now },
+  visits: [{ type: Schema.Types.ObjectId, ref: 'Feedback' }]
+});
+
+CustomerCardSchema.index({ phoneNumber: 1 }, { unique: true });
+
+export const CustomerCardModel = mongoose.model<ICustomerCard>("CustomerCard", CustomerCardSchema);
+
 interface IVisit {
   location: string;
   dineType: "dine_in" | "take_out";
@@ -102,6 +124,27 @@ export class MongoStorage implements IStorage {
         visits: [visit]
       });
       await feedback.save();
+    }
+
+    // Update or create CustomerCard
+    let customerCard = await CustomerCardModel.findOne({ phoneNumber: insertFeedback.phoneNumber });
+    if (customerCard) {
+      customerCard.totalVisits += 1;
+      customerCard.lastVisitDate = now;
+      if (!customerCard.visits.includes(feedback._id as any)) {
+        customerCard.visits.push(feedback._id as any);
+      }
+      await customerCard.save();
+    } else {
+      customerCard = new CustomerCardModel({
+        phoneNumber: insertFeedback.phoneNumber,
+        name: insertFeedback.name,
+        totalVisits: 1,
+        firstVisitDate: now,
+        lastVisitDate: now,
+        visits: [feedback._id]
+      });
+      await customerCard.save();
     }
 
     return this.mapDocument(feedback);

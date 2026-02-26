@@ -31,6 +31,16 @@ export const feedbackSchema = z.object({
   contactedBy: z.string().nullable().optional(),
 });
 
+// Customer Card Schema
+export const customerCardSchema = z.object({
+  phoneNumber: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  name: z.string().min(1, "Name is required"),
+  totalVisits: z.number().int().default(1),
+  firstVisitDate: z.string().or(z.date()),
+  lastVisitDate: z.string().or(z.date()),
+  visits: z.array(z.string()), // Array of feedback document IDs
+});
+
 export const insertFeedbackSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phoneNumber: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
@@ -62,6 +72,7 @@ export const contactUpdateSchema = z.object({
 // Types
 export type Visit = z.infer<typeof visitSchema>;
 export type Feedback = z.infer<typeof feedbackSchema> & { _id: string };
+export type CustomerCard = z.infer<typeof customerCardSchema> & { _id: string };
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
 export type ContactUpdate = z.infer<typeof contactUpdateSchema>;
