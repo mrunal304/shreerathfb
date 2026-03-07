@@ -42,7 +42,11 @@ export default function Home() {
     },
   });
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const errorRef = import("react").then(m => ({ current: null })); // Placeholder for ref logic if needed, but I'll use a simpler approach
+
   const onSubmit = (data: InsertFeedback) => {
+    setSubmitError(null);
     console.log("Submitting feedback:", data);
     createFeedback.mutate(data, {
       onSuccess: (response: any) => {
@@ -52,11 +56,16 @@ export default function Home() {
       },
       onError: (error: any) => {
         console.error("Feedback submission error full response:", error);
-        toast({
-          variant: "destructive",
-          title: "Submission failed",
-          description: error.response?.data?.message || error.message || "Failed to submit feedback",
-        });
+        const message = error.response?.data?.message || error.message || "Failed to submit feedback";
+        setSubmitError(message);
+        
+        // Scroll to error message on mobile
+        setTimeout(() => {
+          const errorElement = document.getElementById("submit-error-message");
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
       },
     });
   };
@@ -365,6 +374,20 @@ export default function Home() {
                   </FormItem>
                 )}
               />
+
+              {submitError && (
+                <motion.div
+                  id="submit-error-message"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full rounded-[8px] bg-[#FEE2E2] border-l-[4px] border-[#C84B0F] p-[12px_16px] flex items-center gap-2"
+                >
+                  <span className="text-lg">⚠️</span>
+                  <p className="text-[#7A2D0E] font-medium leading-tight">
+                    {submitError}
+                  </p>
+                </motion.div>
+              )}
 
               <Button 
                 type="submit" 
