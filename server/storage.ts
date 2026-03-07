@@ -157,7 +157,7 @@ export class MongoStorage implements IStorage {
     };
   }
 
-  async getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: Feedback[]; total: number }> {
+  async getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: any[]; total: number }> {
     const query: any = {};
 
     if (filters.search) {
@@ -173,14 +173,13 @@ export class MongoStorage implements IStorage {
 
     const skip = (filters.page - 1) * filters.limit;
 
-    const [data, total] = await Promise.all([
-      FeedbackModel.find(query).sort({ "visits.createdAt": -1 }),
-      FeedbackModel.countDocuments(query)
-    ]);
-
+    // Get all feedback that matches filters
+    const data = await FeedbackModel.find(query).sort({ "visits.createdAt": -1 });
+    
+    // Map to plain objects and handle old schema
     let results = data.map(doc => this.mapDocument(doc));
     
-    // If filtering by date, we should also filter the visits within each feedback document
+    // If filtering by date, we filter the visits within each feedback document
     if (filters.date) {
       results = results.map(feedback => ({
         ...feedback,
@@ -188,9 +187,37 @@ export class MongoStorage implements IStorage {
       })).filter(feedback => feedback.visits.length > 0);
     }
 
+    // Now for each feedback/visit combination in results, calculate the global visit number
+    // We need to fetch the full history for these phone numbers to be accurate
+    const phoneNumbers = [...new Set(results.map(r => r.phoneNumber))];
+    const allHistory = await FeedbackModel.find({ phoneNumber: { $in: phoneNumbers } });
+    const historyMap = new Map(allHistory.map(h => [h.phoneNumber, this.mapDocument(h).visits.sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )]));
+
+    const enrichedResults = results.map(feedback => {
+      const customerHistory = historyMap.get(feedback.phoneNumber) || [];
+      
+      return {
+        ...feedback,
+        visits: feedback.visits.map(v => {
+          // Find the index of this specific visit in the full history
+          const globalVisitIndex = customerHistory.findIndex(h => 
+            h.dateKey === v.dateKey && 
+            new Date(h.createdAt).getTime() === new Date(v.createdAt).getTime()
+          );
+          
+          return {
+            ...v,
+            globalVisitNumber: globalVisitIndex !== -1 ? globalVisitIndex + 1 : 1
+          };
+        })
+      };
+    });
+
     return {
-      data: results.slice(skip, skip + filters.limit),
-      total: filters.date ? results.length : total
+      data: enrichedResults.slice(skip, skip + filters.limit),
+      total: filters.date ? enrichedResults.length : enrichedResults.length
     };
   }
 

@@ -398,10 +398,9 @@ function FeedbackTab() {
               </TableRow>
             ) : (
               data.data.map((item) => {
-                const visits = [...(item.visits || [])].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                const currentVisitIndex = visits.findIndex(v => v.dateKey === dateKey);
-                const visitNumber = currentVisitIndex !== -1 ? currentVisitIndex + 1 : visits.length;
-                const latestVisit = currentVisitIndex !== -1 ? visits[currentVisitIndex] : visits[visits.length - 1];
+                const visits = item.visits || [];
+                const latestVisit = visits[visits.length - 1];
+                const visitNumber = (latestVisit as any).globalVisitNumber || 1;
                 
                 const getOrdinal = (n: number) => {
                   const s = ["th", "st", "nd", "rd"];
