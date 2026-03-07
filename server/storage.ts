@@ -211,8 +211,12 @@ export class MongoStorage implements IStorage {
             ...v,
             globalVisitNumber: globalVisitIndex !== -1 ? globalVisitIndex + 1 : 1
           };
-        })
+        }).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       };
+    }).sort((a, b) => {
+      const timeA = new Date(a.visits[0]?.createdAt || 0).getTime();
+      const timeB = new Date(b.visits[0]?.createdAt || 0).getTime();
+      return timeA - timeB;
     });
 
     return {
