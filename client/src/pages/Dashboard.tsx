@@ -398,8 +398,17 @@ function FeedbackTab() {
               </TableRow>
             ) : (
               data.data.map((item) => {
-                const visits = item.visits || [];
-                const latestVisit = visits[visits.length - 1];
+                const visits = [...(item.visits || [])].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                const currentVisitIndex = visits.findIndex(v => v.dateKey === dateKey);
+                const visitNumber = currentVisitIndex !== -1 ? currentVisitIndex + 1 : visits.length;
+                const latestVisit = currentVisitIndex !== -1 ? visits[currentVisitIndex] : visits[visits.length - 1];
+                
+                const getOrdinal = (n: number) => {
+                  const s = ["th", "st", "nd", "rd"];
+                  const v = n % 100;
+                  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+                };
+
                 const avgRating = latestVisit ? (Object.values(latestVisit.ratings).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1) : "0.0";
                 
                 return (
@@ -427,7 +436,7 @@ function FeedbackTab() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm font-medium">{visits.length} Visit{visits.length !== 1 ? 's' : ''}</div>
+                      <div className="text-sm font-medium">{getOrdinal(visitNumber)} Visit</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
