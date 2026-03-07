@@ -383,7 +383,7 @@ export default function Home() {
                   className="w-full rounded-[8px] bg-[#FEE2E2] border-l-[4px] border-[#C84B0F] p-[12px_16px] flex items-center gap-2"
                 >
                   <span className="text-lg">⚠️</span>
-                  <p className="text-[#7A2D0E] font-medium leading-tight">
+                  <p className="text-[#7A2D0E] font-semibold leading-tight">
                     {submitError}
                   </p>
                 </motion.div>
