@@ -30,6 +30,7 @@ export const feedbackSchema = z.object({
   visits: z.array(visitSchema),
   contactedAt: z.string().or(z.date()).nullable().optional(),
   contactedBy: z.string().nullable().optional(),
+  contactedDateKey: z.string().nullable().optional(),
 });
 
 // Customer Card Schema
@@ -68,6 +69,7 @@ export const loginSchema = z.object({
 
 export const contactUpdateSchema = z.object({
   contactedBy: z.string().min(1, "Staff name is required"),
+  dateKey: z.string().min(1, "Date key is required"),
 });
 
 // Types

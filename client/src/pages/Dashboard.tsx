@@ -289,7 +289,7 @@ function FeedbackTab() {
   const handleMarkContacted = (id: string) => {
     const staffName = "Admin"; 
     
-    markContacted.mutate({ id, data: { contactedBy: staffName } }, {
+    markContacted.mutate({ id, data: { contactedBy: staffName, dateKey } }, {
       onSuccess: () => {
         toast({ title: "Updated", description: "Customer marked as contacted" });
       },
@@ -455,7 +455,7 @@ function FeedbackTab() {
                       {latestVisit?.createdAt ? format(new Date(latestVisit.createdAt), 'MMM d, h:mm a') : '-'}
                     </TableCell>
                     <TableCell>
-                      {item.contactedBy ? (
+                      {item.contactedAt && item.contactedDateKey === dateKey ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           Contacted
                         </span>

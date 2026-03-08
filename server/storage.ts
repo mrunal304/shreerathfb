@@ -48,6 +48,7 @@ interface IFeedback extends Document {
   visits: IVisit[];
   contactedAt?: Date;
   contactedBy?: string;
+  contactedDateKey?: string;
 }
 
 const VisitSchema = new Schema<IVisit>({
@@ -74,6 +75,7 @@ const FeedbackSchema = new Schema<IFeedback>({
   visits: [VisitSchema],
   contactedAt: Date,
   contactedBy: String,
+  contactedDateKey: String,
 });
 
 // Index for unique phone number
@@ -244,7 +246,8 @@ export class MongoStorage implements IStorage {
       id,
       { 
         contactedBy: update.contactedBy,
-        contactedAt: new Date() 
+        contactedAt: new Date(),
+        contactedDateKey: update.dateKey
       },
       { new: true }
     );
@@ -379,6 +382,7 @@ export class MongoStorage implements IStorage {
       phoneNumber: rawDoc.phoneNumber,
       contactedAt: rawDoc.contactedAt ? (rawDoc.contactedAt instanceof Date ? rawDoc.contactedAt.toISOString() : rawDoc.contactedAt) : undefined,
       contactedBy: rawDoc.contactedBy || null,
+      contactedDateKey: rawDoc.contactedDateKey || null,
       visits: visits.map((v: any) => ({
         location: v.location,
         dineType: v.dineType,
