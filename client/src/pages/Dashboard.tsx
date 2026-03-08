@@ -400,7 +400,9 @@ function FeedbackTab() {
               data.data.map((item) => {
                 const visits = item.visits || [];
                 const latestVisit = visits[visits.length - 1];
-                const visitNumber = Number((latestVisit as any).globalVisitNumber) || 1;
+                const rawGVN = latestVisit ? (latestVisit as any).globalVisitNumber : undefined;
+                console.log('FULL LATEST VISIT OBJECT:', JSON.stringify(latestVisit));
+                const visitNumber = Number(rawGVN) || 1;
                 
                 const getOrdinal = (n: number) => {
                   const s = ["th", "st", "nd", "rd"];
