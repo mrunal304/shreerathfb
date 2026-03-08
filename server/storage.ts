@@ -188,12 +188,25 @@ export class MongoStorage implements IStorage {
     }
 
     // Now for each feedback/visit combination in results, calculate the global visit number
-    // We need to fetch the full history for these phone numbers to be accurate
+    // Get all feedback docs for the phone numbers we need
     const phoneNumbers = [...new Set(results.map(r => r.phoneNumber))];
     const allHistory = await FeedbackModel.find({ phoneNumber: { $in: phoneNumbers } });
-    const historyMap = new Map(allHistory.map(h => [h.phoneNumber, this.mapDocument(h).visits.sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    )]));
+    
+    // For each phone number, create a sorted list of ALL visits (across all feedback docs)
+    const historyMap = new Map<string, Array<{ visit: any; createdAtTime: number }>>();
+    allHistory.forEach(historyDoc => {
+      const mapped = this.mapDocument(historyDoc);
+      const phone = mapped.phoneNumber;
+      const visitsList = (historyMap.get(phone) || []).concat(
+        mapped.visits.map(v => ({
+          visit: v,
+          createdAtTime: new Date(v.createdAt).getTime()
+        }))
+      );
+      // Sort by creation time (oldest first)
+      visitsList.sort((a, b) => a.createdAtTime - b.createdAtTime);
+      historyMap.set(phone, visitsList);
+    });
 
     const enrichedResults = results.map(feedback => {
       const customerHistory = historyMap.get(feedback.phoneNumber) || [];
@@ -201,11 +214,9 @@ export class MongoStorage implements IStorage {
       return {
         ...feedback,
         visits: feedback.visits.map(v => {
-          // Find the index of this specific visit in the full history
-          const globalVisitIndex = customerHistory.findIndex(h => 
-            h.dateKey === v.dateKey && 
-            new Date(h.createdAt).getTime() === new Date(v.createdAt).getTime()
-          );
+          const vTime = new Date(v.createdAt).getTime();
+          // Find the index of this visit in the full sorted history by timestamp
+          const globalVisitIndex = customerHistory.findIndex(h => h.createdAtTime === vTime);
           
           return {
             ...v,
