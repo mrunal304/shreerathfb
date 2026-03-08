@@ -20,6 +20,7 @@ export const visitSchema = z.object({
   staffComment: z.string().min(1, "Staff comment is required"),
   createdAt: z.string().or(z.date()).optional(),
   dateKey: z.string().optional(),
+  globalVisitNumber: z.number().optional(),
 });
 
 // Feedback Schema (Customer-based with Visits)
