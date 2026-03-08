@@ -187,52 +187,55 @@ export class MongoStorage implements IStorage {
       })).filter(feedback => feedback.visits.length > 0);
     }
 
-    // Now for each feedback/visit combination in results, calculate the global visit number
-    // Get all feedback docs for the phone numbers we need
-    const phoneNumbers = [...new Set(results.map(r => r.phoneNumber))];
-    const allHistory = await FeedbackModel.find({ phoneNumber: { $in: phoneNumbers } });
-    
-    // For each phone number, create a sorted list of ALL visits (across all feedback docs)
-    const historyMap = new Map<string, Array<{ visit: any; createdAtTime: number }>>();
-    allHistory.forEach(historyDoc => {
-      const mapped = this.mapDocument(historyDoc);
-      const phone = mapped.phoneNumber;
-      const visitsList = (historyMap.get(phone) || []).concat(
-        mapped.visits.map(v => ({
-          visit: v,
-          createdAtTime: new Date(v.createdAt).getTime()
-        }))
-      );
-      // Sort by creation time (oldest first)
-      visitsList.sort((a, b) => a.createdAtTime - b.createdAtTime);
-      historyMap.set(phone, visitsList);
-    });
+    // STEP 1: Get all unique phone numbers from the filtered results
+    const phoneNumbers = [...new Set(results.map(f => f.phoneNumber))];
 
-    const enrichedResults = results.map(feedback => {
-      const customerHistory = historyMap.get(feedback.phoneNumber) || [];
-      
+    // STEP 2: For each phone number, get ALL their feedback visits sorted by createdAt ASC
+    const visitHistoryMap: Record<string, Record<string, number>> = {};
+    for (const phone of phoneNumbers) {
+      const customerDoc = await FeedbackModel.findOne({ phoneNumber: phone });
+      if (customerDoc) {
+        const allVisits = customerDoc.visits.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        
+        // Build a map: createdAt timestamp -> visit number
+        visitHistoryMap[phone] = {};
+        allVisits.forEach((visit, index) => {
+          const key = new Date(visit.createdAt).getTime().toString();
+          visitHistoryMap[phone][key] = index + 1;
+        });
+      }
+    }
+
+    // STEP 3: Assign globalVisitNumber to each filtered result
+    let enrichedResults = results.map(feedback => {
+      const phone = feedback.phoneNumber;
       return {
         ...feedback,
         visits: feedback.visits.map(v => {
-          const vTime = new Date(v.createdAt).getTime();
-          // Find the index of this visit in the full sorted history by timestamp
-          const globalVisitIndex = customerHistory.findIndex(h => h.createdAtTime === vTime);
-          
+          const createdAtKey = new Date(v.createdAt).getTime().toString();
+          const visitNum = visitHistoryMap[phone]?.[createdAtKey] || 1;
           return {
             ...v,
-            globalVisitNumber: globalVisitIndex !== -1 ? globalVisitIndex + 1 : 1
+            globalVisitNumber: visitNum
           };
-        }).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        })
       };
-    }).sort((a, b) => {
-      const timeA = new Date(a.visits[0]?.createdAt || 0).getTime();
-      const timeB = new Date(b.visits[0]?.createdAt || 0).getTime();
-      return timeA - timeB;
     });
+
+    console.log('Visit numbers assigned:', enrichedResults.map(f => ({
+      name: f.name,
+      phone: f.phoneNumber,
+      visits: f.visits.map(v => ({
+        createdAt: v.createdAt,
+        globalVisitNumber: v.globalVisitNumber
+      }))
+    })));
 
     return {
       data: enrichedResults.slice(skip, skip + filters.limit),
-      total: filters.date ? enrichedResults.length : enrichedResults.length
+      total: enrichedResults.length
     };
   }
 
