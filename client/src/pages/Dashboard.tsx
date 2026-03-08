@@ -398,16 +398,15 @@ function FeedbackTab() {
               </TableRow>
             ) : (
               data.data.map((item) => {
-                const visits = item.visits || [];
-                const latestVisit = visits[visits.length - 1];
-                const rawGVN = latestVisit ? (latestVisit as any).globalVisitNumber : undefined;
-                console.log('FULL LATEST VISIT OBJECT:', JSON.stringify(latestVisit));
-                const visitNumber = Number(rawGVN) || 1;
-                
+                const visits = (item as any).visits || [];
+                const latestVisit = visits[visits.length - 1] as any;
+                const rawGVN = latestVisit?.globalVisitNumber;
+                const visitNumber = rawGVN ? Number(rawGVN) : 1;
                 const getOrdinal = (n: number) => {
-                  const s = ["th", "st", "nd", "rd"];
-                  const v = n % 100;
-                  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+                  if (n === 1) return "1st Visit";
+                  if (n === 2) return "2nd Visit";
+                  if (n === 3) return "3rd Visit";
+                  return `${n}th Visit`;
                 };
 
                 const avgRating = latestVisit ? (Object.values(latestVisit.ratings).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1) : "0.0";
@@ -437,7 +436,7 @@ function FeedbackTab() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm font-medium">{getOrdinal(visitNumber)} Visit</div>
+                      <div className="text-sm font-medium">{getOrdinal(visitNumber)}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
