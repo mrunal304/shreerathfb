@@ -730,6 +730,9 @@ function FeedbackTab() {
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6 pt-4">
+                              {visits.length === 0 && (
+                                <p className="text-center text-muted-foreground py-6">No feedback provided by customer</p>
+                              )}
                               {visits.slice().reverse().map((visit: any, idx: number) => (
                                 <div key={idx} className="p-4 rounded-2xl border border-secondary/10 bg-secondary/5 space-y-4">
                                   <div className="flex justify-between items-start">
