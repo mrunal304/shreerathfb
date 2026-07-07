@@ -457,113 +457,116 @@ function FeedbackTab() {
                     <TableCell>
                       {item.contactedAt && item.contactedDateKey === dateKey ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Contacted
+                          CONTACTED
                         </span>
                       ) : (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="rounded-lg h-8 border-primary text-primary hover:bg-primary/5">
-                              Contact
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Mark as Contacted</DialogTitle>
-                              <DialogDescription>
-                                Confirm that you have reached out to {item.name} regarding their feedback.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="py-4">
-                              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                <div><span className="font-semibold">Phone:</span> {item.phoneNumber}</div>
-                                <div><span className="font-semibold">Latest Rating:</span> {avgRating}</div>
-                              </div>
-                              {latestVisit?.note && (
-                                <div className="bg-muted/50 p-3 rounded-lg text-sm italic text-muted-foreground">
-                                  "{latestVisit.note}"
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                onClick={() => handleMarkContacted(item._id)}
-                                disabled={markContacted.isPending}
-                              >
-                                {markContacted.isPending ? "Updating..." : "Confirm Contact"}
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          PENDING
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-lg h-8 border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000]/5 gap-2"
-                            data-testid={`button-view-details-${item._id}`}
+                      <div className="flex items-center justify-end gap-2">
+                        {!(item.contactedAt && item.contactedDateKey === dateKey) && (
+                          <Button
+                            size="sm"
+                            className="rounded-lg h-8 bg-[#8B0000] text-white hover:bg-[#8B0000]/90 gap-2"
+                            onClick={() => handleMarkContacted(item._id)}
+                            disabled={markContacted.isPending}
                           >
-                            <Eye className="h-4 w-4" />
-                            <span className="hidden lg:inline">View History</span>
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="hidden lg:inline">Mark Contacted</span>
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl font-display text-secondary">Customer History: {item.name}</DialogTitle>
-                            <DialogDescription>Viewing all {visits.length} feedback submissions</DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-6 pt-4">
-                            {visits.slice().reverse().map((visit: any, idx: number) => (
-                              <div key={idx} className="p-4 rounded-2xl border border-secondary/10 bg-secondary/5 space-y-4">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="text-sm font-semibold text-secondary">{format(new Date(visit.createdAt), 'MMMM d, yyyy h:mm a')}</p>
-                                    <p className="text-xs text-muted-foreground">{visit.location} • {visit.dineType === 'dine_in' ? 'Dine In' : 'Take Out'}</p>
-                                  </div>
-                                  <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg shadow-sm">
-                                    <Star className="h-3 w-3 fill-primary text-primary" />
-                                    <span className="font-bold text-primary">
-                                      {(Object.values(visit.ratings).reduce((a: any, b: any) => a + b, 0) / 6).toFixed(1)}
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                  {Object.entries(visit.ratings).map(([cat, val]) => (
-                                    <div key={cat} className="text-xs p-2 bg-white rounded-lg">
-                                      <span className="text-muted-foreground block capitalize">{cat.replace(/([A-Z])/g, ' $1')}</span>
-                                      <span className="font-bold text-secondary">{val as number}/5</span>
+                        )}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-lg h-8 border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000]/5 gap-2"
+                              data-testid={`button-view-details-${item._id}`}
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="hidden lg:inline">View History</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl font-display text-secondary">Customer History: {item.name}</DialogTitle>
+                              <DialogDescription className="flex flex-col gap-1">
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" /> {item.phoneNumber}
+                                </span>
+                                <span>Viewing all {visits.length} feedback submissions</span>
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-6 pt-4">
+                              {visits.slice().reverse().map((visit: any, idx: number) => (
+                                <div key={idx} className="p-4 rounded-2xl border border-secondary/10 bg-secondary/5 space-y-4">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="text-sm font-semibold text-secondary">{format(new Date(visit.createdAt), 'MMMM d, yyyy h:mm a')}</p>
+                                      <p className="text-xs text-muted-foreground">{visit.location} • {visit.dineType === 'dine_in' ? 'Dine In' : 'Take Out'}</p>
                                     </div>
-                                  ))}
-                                </div>
-
-                                {visit.note && (
-                                  <div className="text-sm italic text-muted-foreground bg-white/50 p-2 rounded-lg">
-                                    "{visit.note}"
-                                  </div>
-                                )}
-
-                                <div className="bg-white p-3 rounded-xl shadow-sm text-sm border border-secondary/5">
-                                  <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-semibold text-secondary">Staff Name:</span>
-                                      <span className="text-muted-foreground">{visit.staffName}</span>
+                                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg shadow-sm">
+                                      <Star className="h-3 w-3 fill-primary text-primary" />
+                                      <span className="font-bold text-primary">
+                                        {(Object.values(visit.ratings).reduce((a: any, b: any) => a + b, 0) / 6).toFixed(1)}
+                                      </span>
                                     </div>
-                                    {visit.staffComment && (
-                                      <div className="flex flex-col gap-1">
-                                        <span className="font-semibold text-secondary">Staff Comment:</span>
-                                        <p className="text-muted-foreground italic">"{visit.staffComment}"</p>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {Object.entries(visit.ratings).map(([cat, val]) => (
+                                      <div key={cat} className="text-xs p-2 bg-white rounded-lg">
+                                        <span className="text-muted-foreground block capitalize">{cat.replace(/([A-Z])/g, ' $1')}</span>
+                                        <span className="font-bold text-secondary">{val as number}/5</span>
                                       </div>
-                                    )}
+                                    ))}
+                                  </div>
+
+                                  {visit.note && (
+                                    <div className="text-sm italic text-muted-foreground bg-white/50 p-2 rounded-lg">
+                                      "{visit.note}"
+                                    </div>
+                                  )}
+
+                                  <div className="bg-white p-3 rounded-xl shadow-sm text-sm border border-secondary/5">
+                                    <div className="flex flex-col gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-secondary">Staff Name:</span>
+                                        <span className="text-muted-foreground">{visit.staffName}</span>
+                                      </div>
+                                      {visit.staffComment && (
+                                        <div className="flex flex-col gap-1">
+                                          <span className="font-semibold text-secondary">Staff Comment:</span>
+                                          <p className="text-muted-foreground italic">"{visit.staffComment}"</p>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                              ))}
+                            </div>
+                            <div className="pt-4 border-t border-secondary/10 flex justify-end">
+                              {item.contactedAt && item.contactedDateKey === dateKey ? (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                  <CheckCircle2 className="h-4 w-4 mr-1.5" /> CONTACTED
+                                </span>
+                              ) : (
+                                <Button
+                                  className="bg-[#8B0000] text-white hover:bg-[#8B0000]/90"
+                                  onClick={() => handleMarkContacted(item._id)}
+                                  disabled={markContacted.isPending}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  {markContacted.isPending ? "Updating..." : "Mark as Contacted"}
+                                </Button>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
