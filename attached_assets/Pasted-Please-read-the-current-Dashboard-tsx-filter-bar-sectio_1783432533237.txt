@@ -1,0 +1,39 @@
+Please read the current Dashboard.tsx filter bar section carefully before making changes.
+
+## Two fixes needed in the filter bar ONLY:
+
+### Fix 1: Remove the broken second calendar icon
+- Currently there are TWO calendar icons next to the date — one working, one broken/extra
+- Remove the second/extra calendar icon completely
+- Keep only the single working date picker with its calendar icon
+
+### Fix 2: Redesign the expanded filter behavior
+
+Current behavior:
+- Down arrow clicked → second row appears below with: This Week, This Month, Last Month, Select Month ›, Custom Range ›
+- When an option is selected from second row, second row stays visible
+
+Required behavior:
+- Down arrow clicked → second row appears (same as now) ✓
+- When any option from second row is selected (This Week / This Month / Last Month / Select Month › / Custom Range ›):
+  1. Second row DISAPPEARS/COLLAPSES automatically
+  2. The selected option name appears inline — right next to the arrow button (between Yesterday button and the arrow)
+  3. Arrow changes back to DOWN direction (collapsed state)
+  4. Example: User selects "Last Month" → second row hides → filter bar shows: [📅 date] [Today] [Yesterday] [Last Month ×] [↓]
+  5. The selected filter label should have a small "×" or close icon so user can clear it and go back to default
+- "Showing feedback for:" text on right updates as before
+
+### For "Select Month ›" option:
+- When clicked, instead of second row staying open, show a small inline dropdown/popover with Month + Year selectors right below or next to the arrow
+- Once month+year selected, collapse and show "Jun 2026 ×" next to Yesterday button
+
+### For "Custom Range ›" option:
+- When clicked, show From→To date inputs in a small inline popover/dropdown below the filter bar
+- Once both dates selected, collapse and show "01 Jun – 30 Jun ×" next to Yesterday button
+
+## Rules:
+- Only change the filter bar UI and its expand/collapse behavior
+- Do NOT touch data fetching logic, table, modals, or any other component
+- Do NOT change sidebar, Overview page, or anything else
+- Keep Today and Yesterday buttons working exactly as before
+- Match existing colors, fonts, border styles of the project

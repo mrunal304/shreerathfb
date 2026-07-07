@@ -276,6 +276,7 @@ function FeedbackTab() {
   const [rangeFrom, setRangeFrom] = useState<string>('');
   const [rangeTo, setRangeTo] = useState<string>('');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [showSubPicker, setShowSubPicker] = useState(false);
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const CUR_YEAR = new Date().getFullYear();
@@ -399,12 +400,12 @@ function FeedbackTab() {
         {/* Main filter row */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {/* 1. Label */}
+            {/* Label */}
             <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
 
-            {/* 2. Single date picker — unchanged */}
+            {/* Single date picker — native browser calendar icon hidden to avoid duplicate */}
             <div className="relative">
-              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
               <Input
                 type="date"
                 value={format(selectedDate, 'yyyy-MM-dd')}
@@ -412,16 +413,18 @@ function FeedbackTab() {
                   if (e.target.value) {
                     setSelectedDate(new Date(e.target.value + 'T00:00:00'));
                     setQuickFilter('single_date');
+                    setFilterPanelOpen(false);
+                    setShowSubPicker(false);
                     setPage(1);
                   }
                 }}
-                className="pl-9 h-10 w-[160px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary"
+                className="pl-9 h-10 w-[160px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
               />
             </div>
 
-            {/* 4. Today pill button */}
+            {/* Today pill */}
             <button
-              onClick={() => { setQuickFilter('today'); setPage(1); }}
+              onClick={() => { setQuickFilter('today'); setFilterPanelOpen(false); setShowSubPicker(false); setPage(1); }}
               className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
                 quickFilter === 'today'
                   ? 'bg-secondary text-white border-secondary'
@@ -431,9 +434,9 @@ function FeedbackTab() {
               Today
             </button>
 
-            {/* 5. Yesterday pill button */}
+            {/* Yesterday pill */}
             <button
-              onClick={() => { setQuickFilter('yesterday'); setPage(1); }}
+              onClick={() => { setQuickFilter('yesterday'); setFilterPanelOpen(false); setShowSubPicker(false); setPage(1); }}
               className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
                 quickFilter === 'yesterday'
                   ? 'bg-secondary text-white border-secondary'
@@ -443,30 +446,59 @@ function FeedbackTab() {
               Yesterday
             </button>
 
-            {/* 6. Arrow toggle — shows/hides extra filter options */}
+            {/* Active panel filter pill — shown inline when a range filter is selected */}
+            {(['this_week', 'this_month', 'last_month', 'select_month', 'custom_range'] as QuickFilter[]).includes(quickFilter) && (
+              <span className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium bg-secondary text-white border border-secondary">
+                {quickFilter === 'this_week' && 'This Week'}
+                {quickFilter === 'this_month' && 'This Month'}
+                {quickFilter === 'last_month' && 'Last Month'}
+                {quickFilter === 'select_month' && format(new Date(selectedYear, selectedMonth, 1), 'MMM yyyy')}
+                {quickFilter === 'custom_range' && (
+                  rangeFrom && rangeTo
+                    ? `${format(new Date(rangeFrom + 'T00:00:00'), 'dd MMM')} – ${format(new Date(rangeTo + 'T00:00:00'), 'dd MMM')}`
+                    : 'Custom Range'
+                )}
+                <button
+                  onClick={() => {
+                    setQuickFilter('today');
+                    setFilterPanelOpen(false);
+                    setShowSubPicker(false);
+                    setRangeFrom('');
+                    setRangeTo('');
+                    setPage(1);
+                  }}
+                  className="hover:text-white/70 transition-colors ml-0.5"
+                  title="Clear filter"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Arrow toggle — expand/collapse more filter options */}
             <button
-              onClick={() => setFilterPanelOpen(prev => !prev)}
+              onClick={() => { setFilterPanelOpen(prev => !prev); setShowSubPicker(false); }}
               title="More filter options"
               className={`h-9 w-9 rounded-full flex items-center justify-center border transition-colors ${
-                filterPanelOpen || !['today', 'yesterday', 'single_date'].includes(quickFilter)
+                filterPanelOpen
                   ? 'bg-secondary text-white border-secondary'
                   : 'border-secondary text-secondary hover:bg-secondary/5'
               }`}
             >
               {filterPanelOpen
-                ? <ChevronDown className="h-4 w-4" />
-                : <ChevronUp className="h-4 w-4" />
+                ? <ChevronUp className="h-4 w-4" />
+                : <ChevronDown className="h-4 w-4" />
               }
             </button>
           </div>
 
-          {/* 7. Showing label */}
+          {/* Showing label */}
           <div className="text-sm font-medium text-secondary bg-secondary/5 px-4 py-2 rounded-xl shrink-0">
             Showing feedback for: <span className="text-primary font-bold">{showingLabel}</span>
           </div>
         </div>
 
-        {/* Expanded panel — extra filter options */}
+        {/* Expanded panel — pick a range filter; collapses on selection */}
         {filterPanelOpen && (
           <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap items-center gap-2">
             {(['this_week', 'this_month', 'last_month', 'select_month', 'custom_range'] as QuickFilter[]).map((f) => {
@@ -480,7 +512,13 @@ function FeedbackTab() {
               return (
                 <button
                   key={f}
-                  onClick={() => { setQuickFilter(f); setPage(1); }}
+                  onClick={() => {
+                    setQuickFilter(f);
+                    setPage(1);
+                    setFilterPanelOpen(false);
+                    // select_month and custom_range open a sub-picker instead
+                    setShowSubPicker(f === 'select_month' || f === 'custom_range');
+                  }}
                   className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
                     quickFilter === f
                       ? 'bg-secondary text-white border-secondary'
@@ -491,44 +529,65 @@ function FeedbackTab() {
                 </button>
               );
             })}
+          </div>
+        )}
 
-            {/* Month + Year pickers (shown only when select_month is active) */}
-            {quickFilter === 'select_month' && (
-              <>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => { setSelectedMonth(Number(e.target.value)); setPage(1); }}
-                  className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                >
-                  {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-                </select>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => { setSelectedYear(Number(e.target.value)); setPage(1); }}
-                  className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                >
-                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </>
-            )}
+        {/* Sub-picker: Select Month — appears below filter bar after selecting "Select Month ›" */}
+        {showSubPicker && !filterPanelOpen && quickFilter === 'select_month' && (
+          <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Pick Month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => { setSelectedMonth(Number(e.target.value)); setPage(1); }}
+              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => { setSelectedYear(Number(e.target.value)); setPage(1); }}
+              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button
+              onClick={() => setShowSubPicker(false)}
+              className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        )}
 
-            {/* From → To date inputs (shown only when custom_range is active) */}
-            {quickFilter === 'custom_range' && (
-              <>
-                <Input
-                  type="date"
-                  value={rangeFrom}
-                  onChange={(e) => { setRangeFrom(e.target.value); setPage(1); }}
-                  className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
-                />
-                <span className="text-muted-foreground text-sm font-medium">→</span>
-                <Input
-                  type="date"
-                  value={rangeTo}
-                  onChange={(e) => { setRangeTo(e.target.value); setPage(1); }}
-                  className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
-                />
-              </>
+        {/* Sub-picker: Custom Range — appears below filter bar after selecting "Custom Range ›" */}
+        {showSubPicker && !filterPanelOpen && quickFilter === 'custom_range' && (
+          <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Date Range:</span>
+            <Input
+              type="date"
+              value={rangeFrom}
+              onChange={(e) => { setRangeFrom(e.target.value); setPage(1); }}
+              className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+            />
+            <span className="text-muted-foreground text-sm font-medium">→</span>
+            <Input
+              type="date"
+              value={rangeTo}
+              onChange={(e) => {
+                setRangeTo(e.target.value);
+                setPage(1);
+                // auto-close once both dates are filled
+                if (rangeFrom && e.target.value) setShowSubPicker(false);
+              }}
+              className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+            />
+            {!(rangeFrom && rangeTo) && (
+              <button
+                onClick={() => setShowSubPicker(false)}
+                className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
+              >
+                Done
+              </button>
             )}
           </div>
         )}
