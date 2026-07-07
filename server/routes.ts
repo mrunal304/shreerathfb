@@ -40,9 +40,8 @@ export async function registerRoutes(
 
   const adminUsername = process.env.ADMIN_USERNAME || "admin";
   const adminPassword = process.env.ADMIN_PASSWORD;
-
   if (!adminPassword) {
-    throw new Error("ADMIN_PASSWORD environment variable is required");
+    throw new Error("ADMIN_PASSWORD environment variable is required. Please set it as a Replit Secret.");
   }
 
   passport.use(
