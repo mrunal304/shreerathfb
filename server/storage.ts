@@ -259,14 +259,35 @@ export class MongoStorage implements IStorage {
     const startDate = new Date();
     startDate.setDate(now.getDate() - (period === 'week' ? 7 : 30));
 
+    // Current calendar month bounds (for Fix 1 & Fix 2)
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Fix 1: Total Feedback = visits submitted in the current calendar month only
+    const monthlyVisitStats = await FeedbackModel.aggregate([
+      { $unwind: "$visits" },
+      { $match: { "visits.createdAt": { $gte: currentMonthStart } } },
+      { $group: { _id: null, total: { $sum: 1 } } }
+    ]);
+    const totalFeedbackThisMonth = monthlyVisitStats[0]?.total || 0;
+
+    // Fix 2: Response Rate = customers contacted for this month's feedback / total visits this month
+    // contactedDateKey stores the feedback date the admin was viewing when they clicked "Mark Contacted"
+    const contactedThisMonth = await FeedbackModel.countDocuments({
+      contactedAt: { $exists: true, $ne: null },
+      contactedDateKey: { $regex: `^${currentMonthKey}` }
+    });
+    const responseRate = totalFeedbackThisMonth > 0
+      ? Math.round((contactedThisMonth / totalFeedbackThisMonth) * 100)
+      : 0;
+
+    // Ratings/averages use the existing period-based range (unchanged)
     const stats = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
       { $match: { "visits.createdAt": { $gte: startDate } } },
       {
         $group: {
           _id: null,
-          total: { $sum: 1 },
-          contacted: { $sum: { $cond: [{ $ifNull: ["$contactedAt", false] }, 1, 0] } },
           avgFoodQuality: { $avg: "$visits.ratings.foodQuality" },
           avgFoodTaste: { $avg: "$visits.ratings.foodTaste" },
           avgStaffBehavior: { $avg: "$visits.ratings.staffBehavior" },
@@ -278,8 +299,6 @@ export class MongoStorage implements IStorage {
     ]);
 
     const result = stats[0] || { 
-      total: 0, 
-      contacted: 0, 
       avgFoodQuality: 0, 
       avgFoodTaste: 0, 
       avgStaffBehavior: 0, 
@@ -327,9 +346,9 @@ export class MongoStorage implements IStorage {
     ]);
 
     return {
-      totalFeedback: result.total,
+      totalFeedback: totalFeedbackThisMonth,
       averageRating: Number(overallAvg.toFixed(1)),
-      responseRate: result.total > 0 ? Math.round((result.contacted / result.total) * 100) : 0,
+      responseRate,
       topCategory: topCategory.replace(/([A-Z])/g, ' $1').trim().toLowerCase(),
       weeklyTrends: trends.map(t => ({
         date: t._id,
