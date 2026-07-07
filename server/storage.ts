@@ -87,7 +87,7 @@ export interface IStorage {
   createFeedback(feedback: InsertFeedback): Promise<FeedbackCreateResponse>;
   getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: Feedback[]; total: number }>;
   markContacted(id: string, update: ContactUpdate): Promise<Feedback | null>;
-  getAnalytics(period: 'week' | 'month'): Promise<AnalyticsData>;
+  getAnalytics(options: { dateFrom?: string; dateTo?: string }): Promise<AnalyticsData>;
 }
 
 export class MongoStorage implements IStorage {
@@ -254,37 +254,50 @@ export class MongoStorage implements IStorage {
     return updated ? this.mapDocument(updated) : null;
   }
 
-  async getAnalytics(period: 'week' | 'month'): Promise<AnalyticsData> {
+  async getAnalytics(options: { dateFrom?: string; dateTo?: string } = {}): Promise<AnalyticsData> {
     const now = new Date();
-    const startDate = new Date();
-    startDate.setDate(now.getDate() - (period === 'week' ? 7 : 30));
+    const { dateFrom, dateTo } = options;
 
-    // Current calendar month bounds (for Fix 1 & Fix 2)
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // Determine date range
+    let rangeStart: Date;
+    let rangeEnd: Date;
+    if (dateFrom && dateTo) {
+      rangeStart = new Date(dateFrom + 'T00:00:00');
+      rangeEnd = new Date(dateTo + 'T23:59:59');
+    } else {
+      // Default: last 7 days
+      rangeStart = new Date(now);
+      rangeStart.setDate(now.getDate() - 6);
+      rangeStart.setHours(0, 0, 0, 0);
+      rangeEnd = now;
+    }
 
-    // Fix 1: Total Feedback = visits submitted in the current calendar month only
-    const monthlyVisitStats = await FeedbackModel.aggregate([
+    // String keys for contactedDateKey comparisons (stored as 'yyyy-MM-dd')
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fromKey = `${rangeStart.getFullYear()}-${pad(rangeStart.getMonth() + 1)}-${pad(rangeStart.getDate())}`;
+    const toKey = `${rangeEnd.getFullYear()}-${pad(rangeEnd.getMonth() + 1)}-${pad(rangeEnd.getDate())}`;
+
+    // Total visits in range
+    const totalStats = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: currentMonthStart } } },
+      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
       { $group: { _id: null, total: { $sum: 1 } } }
     ]);
-    const totalFeedbackThisMonth = monthlyVisitStats[0]?.total || 0;
+    const totalFeedback = totalStats[0]?.total || 0;
 
-    // Fix 2: Response Rate = customers contacted for this month's feedback / total visits this month
-    // contactedDateKey stores the feedback date the admin was viewing when they clicked "Mark Contacted"
-    const contactedThisMonth = await FeedbackModel.countDocuments({
+    // Contacted in range: feedback docs where contactedDateKey falls in [fromKey, toKey]
+    const contactedCount = await FeedbackModel.countDocuments({
       contactedAt: { $exists: true, $ne: null },
-      contactedDateKey: { $regex: `^${currentMonthKey}` }
+      contactedDateKey: { $gte: fromKey, $lte: toKey }
     });
-    const responseRate = totalFeedbackThisMonth > 0
-      ? Math.round((contactedThisMonth / totalFeedbackThisMonth) * 100)
+    const responseRate = totalFeedback > 0
+      ? Math.round((contactedCount / totalFeedback) * 100)
       : 0;
 
-    // Ratings/averages use the existing period-based range (unchanged)
+    // Average ratings in range
     const stats = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: startDate } } },
+      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
       {
         $group: {
           _id: null,
@@ -298,15 +311,11 @@ export class MongoStorage implements IStorage {
       }
     ]);
 
-    const result = stats[0] || { 
-      avgFoodQuality: 0, 
-      avgFoodTaste: 0, 
-      avgStaffBehavior: 0, 
-      avgHygiene: 0,
-      avgAmbience: 0,
-      avgServiceSpeed: 0
+    const result = stats[0] || {
+      avgFoodQuality: 0, avgFoodTaste: 0, avgStaffBehavior: 0,
+      avgHygiene: 0, avgAmbience: 0, avgServiceSpeed: 0
     };
-    
+
     const categories = ['foodQuality', 'foodTaste', 'staffBehavior', 'hygiene', 'ambience', 'serviceSpeed'];
     const averages = {
       foodQuality: result.avgFoodQuality || 0,
@@ -317,20 +326,18 @@ export class MongoStorage implements IStorage {
       serviceSpeed: result.avgServiceSpeed || 0,
     };
 
-    const overallAvg = (averages.foodQuality + averages.foodTaste + averages.staffBehavior + averages.hygiene + averages.ambience + averages.serviceSpeed) / 6;
+    const overallAvg = Object.values(averages).reduce((a, b) => a + b, 0) / 6;
 
     let topCategory = 'foodQuality';
     let maxVal = -1;
     for (const [cat, val] of Object.entries(averages)) {
-      if (val > maxVal) {
-        maxVal = val;
-        topCategory = cat;
-      }
+      if (val > maxVal) { maxVal = val; topCategory = cat; }
     }
 
+    // Trends in range
     const trends = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: startDate } } },
+      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$visits.createdAt" } },
@@ -346,7 +353,7 @@ export class MongoStorage implements IStorage {
     ]);
 
     return {
-      totalFeedback: totalFeedbackThisMonth,
+      totalFeedback,
       averageRating: Number(overallAvg.toFixed(1)),
       responseRate,
       topCategory: topCategory.replace(/([A-Z])/g, ' $1').trim().toLowerCase(),
@@ -364,8 +371,8 @@ export class MongoStorage implements IStorage {
         rating: averages[cat as keyof typeof averages]
       })),
       feedbackVolume: [
-        { name: 'Contacted', value: contactedThisMonth },
-        { name: 'Pending', value: Math.max(0, totalFeedbackThisMonth - contactedThisMonth) }
+        { name: 'Contacted', value: contactedCount },
+        { name: 'Pending', value: Math.max(0, totalFeedback - contactedCount) }
       ]
     };
   }

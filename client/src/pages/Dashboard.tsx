@@ -167,23 +167,179 @@ export default function Dashboard() {
 }
 
 function OverviewTab() {
-  const { data: analytics, isLoading } = useAnalytics('week');
+  type OverviewFilter = 'today' | 'last7' | 'this_month' | 'last_month' | 'select_month' | 'custom_range';
+  const [activeFilter, setActiveFilter] = useState<OverviewFilter>('last7');
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [showSubPicker, setShowSubPicker] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [rangeFrom, setRangeFrom] = useState('');
+  const [rangeTo, setRangeTo] = useState('');
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const CUR_YEAR = new Date().getFullYear();
+  const YEARS = [CUR_YEAR - 2, CUR_YEAR - 1, CUR_YEAR];
+
+  const filterParams = useMemo(() => {
+    const now = new Date();
+    const todayStr = format(startOfToday(), 'yyyy-MM-dd');
+    switch (activeFilter) {
+      case 'today':
+        return { dateFrom: todayStr, dateTo: todayStr };
+      case 'last7':
+        return { dateFrom: format(subDays(startOfToday(), 6), 'yyyy-MM-dd'), dateTo: todayStr };
+      case 'this_month':
+        return {
+          dateFrom: format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd'),
+          dateTo: todayStr,
+        };
+      case 'last_month':
+        return {
+          dateFrom: format(new Date(now.getFullYear(), now.getMonth() - 1, 1), 'yyyy-MM-dd'),
+          dateTo: format(new Date(now.getFullYear(), now.getMonth(), 0), 'yyyy-MM-dd'),
+        };
+      case 'select_month':
+        return {
+          dateFrom: format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd'),
+          dateTo: format(new Date(selectedYear, selectedMonth + 1, 0), 'yyyy-MM-dd'),
+        };
+      case 'custom_range':
+        return (rangeFrom && rangeTo)
+          ? { dateFrom: rangeFrom, dateTo: rangeTo }
+          : { dateFrom: format(subDays(startOfToday(), 6), 'yyyy-MM-dd'), dateTo: todayStr };
+      default:
+        return { dateFrom: format(subDays(startOfToday(), 6), 'yyyy-MM-dd'), dateTo: todayStr };
+    }
+  }, [activeFilter, selectedMonth, selectedYear, rangeFrom, rangeTo]);
+
+  const activeLabel = useMemo(() => {
+    const now = new Date();
+    switch (activeFilter) {
+      case 'today':        return 'Today';
+      case 'last7':        return 'Last 7 Days';
+      case 'this_month':   return format(now, 'MMMM yyyy');
+      case 'last_month':   return format(new Date(now.getFullYear(), now.getMonth() - 1, 1), 'MMMM yyyy');
+      case 'select_month': return format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy');
+      case 'custom_range':
+        return (rangeFrom && rangeTo)
+          ? `${format(new Date(rangeFrom + 'T00:00:00'), 'dd MMM')} – ${format(new Date(rangeTo + 'T00:00:00'), 'dd MMM')}`
+          : 'Custom Range';
+      default: return 'Last 7 Days';
+    }
+  }, [activeFilter, selectedMonth, selectedYear, rangeFrom, rangeTo]);
+
+  const { data: analytics, isLoading } = useAnalytics(filterParams);
+
+  const filterOptions: { value: OverviewFilter; label: string }[] = [
+    { value: 'today',        label: 'Today' },
+    { value: 'last7',        label: 'Last 7 Days' },
+    { value: 'this_month',   label: 'This Month' },
+    { value: 'last_month',   label: 'Last Month' },
+    { value: 'select_month', label: 'Select Month ›' },
+    { value: 'custom_range', label: 'Custom Range ›' },
+  ];
 
   if (isLoading) return <div className="flex justify-center p-12"><div className="animate-spin text-primary">Loading...</div></div>;
   if (!analytics) return <div>No data available</div>;
 
   return (
     <div className="space-y-6 page-transition">
-      <div className="flex justify-between items-end">
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold text-secondary font-display">Dashboard Overview</h1>
           <p className="text-muted-foreground">Welcome back, here's what's happening today.</p>
         </div>
-        <div className="text-sm text-muted-foreground bg-white px-3 py-1 rounded-full shadow-sm">
-          Last 7 Days
-        </div>
+        {/* Filter dropdown button */}
+        <button
+          onClick={() => { setFilterPanelOpen(p => !p); setShowSubPicker(false); }}
+          className="flex items-center gap-2 text-sm font-medium bg-white px-4 py-2 rounded-full shadow-sm text-secondary hover:bg-secondary/5 transition-colors border border-border/50"
+        >
+          {activeLabel}
+          {filterPanelOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
       </div>
 
+      {/* Filter option panel */}
+      {filterPanelOpen && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase mr-1">Period:</span>
+          {filterOptions.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => {
+                setActiveFilter(value);
+                setFilterPanelOpen(false);
+                setShowSubPicker(value === 'select_month' || value === 'custom_range');
+              }}
+              className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
+                activeFilter === value
+                  ? 'bg-secondary text-white border-secondary'
+                  : 'border-secondary text-secondary hover:bg-secondary/5'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Sub-picker: Select Month */}
+      {showSubPicker && !filterPanelOpen && activeFilter === 'select_month' && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Pick Month:</span>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          >
+            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          >
+            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button
+            onClick={() => setShowSubPicker(false)}
+            className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
+          >
+            Done
+          </button>
+        </div>
+      )}
+
+      {/* Sub-picker: Custom Range */}
+      {showSubPicker && !filterPanelOpen && activeFilter === 'custom_range' && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Date Range:</span>
+          <Input
+            type="date"
+            value={rangeFrom}
+            onChange={(e) => { setRangeFrom(e.target.value); if (e.target.value && rangeTo) setShowSubPicker(false); }}
+            className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+          />
+          <span className="text-muted-foreground text-sm font-medium">→</span>
+          <Input
+            type="date"
+            value={rangeTo}
+            onChange={(e) => { setRangeTo(e.target.value); if (rangeFrom && e.target.value) setShowSubPicker(false); }}
+            className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+          />
+          {!(rangeFrom && rangeTo) && (
+            <button
+              onClick={() => setShowSubPicker(false)}
+              className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
+            >
+              Done
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Total Feedback" 
@@ -216,7 +372,7 @@ function OverviewTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Weekly Trend Chart */}
+        {/* Rating Trends chart */}
         <div className="bg-white p-6 rounded-3xl shadow-lg border border-border/50">
           <h3 className="text-lg font-semibold text-secondary mb-4">Rating Trends</h3>
           <div className="h-[300px]">
@@ -225,9 +381,7 @@ function OverviewTab() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
                 <XAxis dataKey="date" stroke="#8B4513" fontSize={12} tickFormatter={(val) => format(new Date(val), 'dd MMM')} />
                 <YAxis domain={[0, 5]} stroke="#8B4513" fontSize={12} />
-                <LineChartTooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                />
+                <LineChartTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                 <Line type="monotone" dataKey="foodQuality" stroke="#FF4500" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="serviceSpeed" stroke="#228B22" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="ambience" stroke="#8B4513" strokeWidth={2} dot={false} />
@@ -241,7 +395,7 @@ function OverviewTab() {
           </div>
         </div>
 
-        {/* Category Performance */}
+        {/* Category Performance chart */}
         <div className="bg-white p-6 rounded-3xl shadow-lg border border-border/50">
           <h3 className="text-lg font-semibold text-secondary mb-4">Category Performance</h3>
           <div className="h-[300px]">

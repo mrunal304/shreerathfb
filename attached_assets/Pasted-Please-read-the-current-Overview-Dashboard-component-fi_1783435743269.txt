@@ -1,0 +1,64 @@
+Please read the current Overview/Dashboard component file carefully and check how the existing "Last 7 Days" dropdown works and what data it fetches before making any changes.
+
+## What to add: Enhanced Date Filter for Overview Page
+
+### Current State:
+- There is a "Last 7 Days" dropdown button in the top right of Overview page
+- It shows: Total Feedback, Average Rating, Response Rate, Top Category cards
+- Currently limited options only
+
+### Required Changes:
+
+## 1. Expand the existing "Last 7 Days" dropdown options
+
+Replace or expand the current dropdown to include these options:
+1. Today
+2. Last 7 Days (existing — keep as default)
+3. This Month
+4. Last Month
+5. Select Month › (clicking shows Month + Year picker inline)
+6. Custom Range › (clicking shows From → To date inputs inline)
+
+## 2. Update all 4 overview cards based on selected period
+
+When any filter is selected, ALL cards must recalculate for that date range:
+
+### Total Feedback card:
+- Count of all feedback submissions in the selected period
+- Example: "April 2026" selected → count only April feedbacks
+
+### Average Rating card:
+- Average of all ratings in the selected period
+- Example: April feedbacks average rating
+
+### Response Rate card:
+- Formula: (Contacts marked as "CONTACTED" in selected period / Total feedbacks in selected period) × 100
+- Example: April had 10 feedbacks, 7 were marked contacted → 70%
+
+### Top Category card:
+- The category with highest average rating in the selected period
+- Example: In April, "Food Quality" had highest average → show "Food Quality"
+
+## 3. Update the dropdown label to show selected period
+- After selection, button shows what is selected:
+  - "Last 7 Days" / "This Month" / "Last Month" / "April 2026" / "01 Apr – 30 Apr"
+
+## 4. For "Select Month ›" option:
+- Show Month + Year dropdowns inline below the button
+- After selecting, collapse and apply filter
+- Follow same pattern already implemented in Feedback page filter
+
+## 5. For "Custom Range ›" option:
+- Show From → To date inputs inline
+- After both dates selected, collapse and apply filter
+- Follow same pattern already implemented in Feedback page filter
+
+## Rules:
+- First check how the existing "Last 7 Days" API call/query works — extend that same logic
+- Check the Feedback page filter implementation and reuse the same patterns
+- Do NOT change the card UI design, colors, icons, or layout
+- Do NOT change the Rating Trends chart or Category Performance chart behavior (they can stay as is or update — your choice based on what's easier)
+- Do NOT touch the Feedback page
+- Do NOT change sidebar or any other component
+- Show which files you will edit before making changes
+- Make sure the dropdown is visible on mobile too (this was a previous issue — keep it responsive)
