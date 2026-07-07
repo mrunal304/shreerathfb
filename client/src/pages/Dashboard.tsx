@@ -757,11 +757,11 @@ function FeedbackTab() {
                                     ))}
                                   </div>
 
-                                  {visit.note && (
-                                    <div className="text-sm italic text-muted-foreground bg-white/50 p-2 rounded-lg">
-                                      "{visit.note}"
-                                    </div>
-                                  )}
+                                  <div className="text-sm italic text-muted-foreground bg-white/50 p-2 rounded-lg">
+                                    {visit.note && visit.note !== '-'
+                                      ? `"${visit.note}"`
+                                      : 'No comment provided by customer'}
+                                  </div>
 
                                   <div className="bg-white p-3 rounded-xl shadow-sm text-sm border border-secondary/5">
                                     <div className="flex flex-col gap-2">
