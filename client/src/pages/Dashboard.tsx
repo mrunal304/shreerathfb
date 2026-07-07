@@ -29,7 +29,7 @@ import {
 } from "recharts";
 import { format, subDays, startOfToday, startOfYesterday } from "date-fns";
 import { 
-  LayoutDashboard, LogOut, Search, Star, TrendingUp, Phone, Eye, Menu, X, CheckCircle2, MessageSquare, Calendar as CalendarIcon
+  LayoutDashboard, LogOut, Search, Star, TrendingUp, Phone, Eye, Menu, X, CheckCircle2, MessageSquare, Calendar as CalendarIcon, ChevronUp, ChevronDown
 } from "lucide-react";
 import {
   Tooltip as ShadcnTooltip,
@@ -275,6 +275,7 @@ function FeedbackTab() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [rangeFrom, setRangeFrom] = useState<string>('');
   const [rangeTo, setRangeTo] = useState<string>('');
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const CUR_YEAR = new Date().getFullYear();
@@ -395,10 +396,13 @@ function FeedbackTab() {
 
       {/* Date Filter Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50">
+        {/* Main filter row */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 1. Label */}
             <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
-            {/* Single date picker */}
+
+            {/* 2. Single date picker — unchanged */}
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
               <Input
@@ -415,25 +419,80 @@ function FeedbackTab() {
               />
             </div>
 
-            {/* Quick filter dropdown */}
-            <select
-              value={quickFilter === 'single_date' ? '' : quickFilter}
-              onChange={(e) => {
-                if (e.target.value) { setQuickFilter(e.target.value as QuickFilter); setPage(1); }
-              }}
-              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[150px]"
+            {/* 4. Today pill button */}
+            <button
+              onClick={() => { setQuickFilter('today'); setPage(1); }}
+              className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
+                quickFilter === 'today'
+                  ? 'bg-secondary text-white border-secondary'
+                  : 'border-secondary text-secondary hover:bg-secondary/5'
+              }`}
             >
-              <option value="" disabled>Quick Filter…</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this_week">This Week</option>
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="select_month">Select Month ›</option>
-              <option value="custom_range">Custom Range ›</option>
-            </select>
+              Today
+            </button>
 
-            {/* Inline: Month + Year pickers (shown only for select_month) */}
+            {/* 5. Yesterday pill button */}
+            <button
+              onClick={() => { setQuickFilter('yesterday'); setPage(1); }}
+              className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
+                quickFilter === 'yesterday'
+                  ? 'bg-secondary text-white border-secondary'
+                  : 'border-secondary text-secondary hover:bg-secondary/5'
+              }`}
+            >
+              Yesterday
+            </button>
+
+            {/* 6. Arrow toggle — shows/hides extra filter options */}
+            <button
+              onClick={() => setFilterPanelOpen(prev => !prev)}
+              title="More filter options"
+              className={`h-9 w-9 rounded-full flex items-center justify-center border transition-colors ${
+                filterPanelOpen || !['today', 'yesterday', 'single_date'].includes(quickFilter)
+                  ? 'bg-secondary text-white border-secondary'
+                  : 'border-secondary text-secondary hover:bg-secondary/5'
+              }`}
+            >
+              {filterPanelOpen
+                ? <ChevronDown className="h-4 w-4" />
+                : <ChevronUp className="h-4 w-4" />
+              }
+            </button>
+          </div>
+
+          {/* 7. Showing label */}
+          <div className="text-sm font-medium text-secondary bg-secondary/5 px-4 py-2 rounded-xl shrink-0">
+            Showing feedback for: <span className="text-primary font-bold">{showingLabel}</span>
+          </div>
+        </div>
+
+        {/* Expanded panel — extra filter options */}
+        {filterPanelOpen && (
+          <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap items-center gap-2">
+            {(['this_week', 'this_month', 'last_month', 'select_month', 'custom_range'] as QuickFilter[]).map((f) => {
+              const labels: Record<string, string> = {
+                this_week: 'This Week',
+                this_month: 'This Month',
+                last_month: 'Last Month',
+                select_month: 'Select Month ›',
+                custom_range: 'Custom Range ›',
+              };
+              return (
+                <button
+                  key={f}
+                  onClick={() => { setQuickFilter(f); setPage(1); }}
+                  className={`h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
+                    quickFilter === f
+                      ? 'bg-secondary text-white border-secondary'
+                      : 'border-secondary text-secondary hover:bg-secondary/5'
+                  }`}
+                >
+                  {labels[f]}
+                </button>
+              );
+            })}
+
+            {/* Month + Year pickers (shown only when select_month is active) */}
             {quickFilter === 'select_month' && (
               <>
                 <select
@@ -453,7 +512,7 @@ function FeedbackTab() {
               </>
             )}
 
-            {/* Inline: From → To date inputs (shown only for custom_range) */}
+            {/* From → To date inputs (shown only when custom_range is active) */}
             {quickFilter === 'custom_range' && (
               <>
                 <Input
@@ -472,12 +531,7 @@ function FeedbackTab() {
               </>
             )}
           </div>
-
-          {/* Showing label */}
-          <div className="text-sm font-medium text-secondary bg-secondary/5 px-4 py-2 rounded-xl shrink-0">
-            Showing feedback for: <span className="text-primary font-bold">{showingLabel}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="bg-white rounded-3xl shadow-lg border border-border/50 overflow-hidden">
