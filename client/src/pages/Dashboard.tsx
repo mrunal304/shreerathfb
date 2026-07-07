@@ -551,6 +551,7 @@ function FeedbackTab() {
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button
+              type="button"
               onClick={() => setShowSubPicker(false)}
               className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
             >
@@ -583,6 +584,7 @@ function FeedbackTab() {
             />
             {!(rangeFrom && rangeTo) && (
               <button
+                type="button"
                 onClick={() => setShowSubPicker(false)}
                 className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
               >
