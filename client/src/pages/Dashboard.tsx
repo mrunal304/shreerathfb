@@ -142,7 +142,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 min-h-screen overflow-y-auto w-full">
+      <main className="flex-1 px-4 py-6 md:py-8 md:px-4 min-h-screen overflow-y-auto w-full">
         <header className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
             <Button 
@@ -542,7 +542,7 @@ function FeedbackTab() {
               <TableHead className="w-[150px] font-semibold text-secondary">Visit Info</TableHead>
               <TableHead className="font-semibold text-secondary">Ratings</TableHead>
               <TableHead className="hidden md:table-cell font-semibold text-secondary">Note</TableHead>
-              <TableHead className="font-semibold text-secondary">Date</TableHead>
+              <TableHead className="font-semibold text-secondary w-[92px]">Date</TableHead>
               <TableHead className="font-semibold text-secondary">Status</TableHead>
               <TableHead className="text-right font-semibold text-secondary">Actions</TableHead>
             </TableRow>
@@ -614,8 +614,13 @@ function FeedbackTab() {
                         {latestVisit?.note || "-"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {latestVisit?.createdAt ? format(new Date(latestVisit.createdAt), 'MMM d, h:mm a') : '-'}
+                    <TableCell className="text-sm text-muted-foreground w-[92px]">
+                      {latestVisit?.createdAt ? (
+                        <div>
+                          <span className="whitespace-nowrap block">{format(new Date(latestVisit.createdAt), 'MMM d,')}</span>
+                          <span className="whitespace-nowrap block">{format(new Date(latestVisit.createdAt), 'h:mm a')}</span>
+                        </div>
+                      ) : '-'}
                     </TableCell>
                     <TableCell>
                       {isContacted ? (
@@ -629,7 +634,7 @@ function FeedbackTab() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-col items-end gap-1">
                         {!isContacted && (
                           <Button
                             size="sm"
