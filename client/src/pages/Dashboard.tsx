@@ -634,15 +634,15 @@ function FeedbackTab() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center justify-end gap-1">
                         {!isContacted && (
                           <Button
                             size="sm"
-                            className="rounded-lg h-8 bg-secondary text-white hover:bg-secondary/90 gap-2"
+                            className="rounded-lg h-7 px-2 py-0.5 text-xs bg-secondary text-white hover:bg-secondary/90 gap-1"
                             onClick={() => handleMarkContacted(item._id)}
                             disabled={markContacted.isPending}
                           >
-                            <CheckCircle2 className="h-4 w-4" />
+                            <CheckCircle2 className="h-3 w-3" />
                             <span className="hidden lg:inline">Mark Contacted</span>
                           </Button>
                         )}
@@ -651,10 +651,10 @@ function FeedbackTab() {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="rounded-lg h-8 border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000]/5 gap-2"
+                              className="rounded-lg h-7 px-2 py-0.5 text-xs border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000]/5 gap-1"
                               data-testid={`button-view-details-${item._id}`}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3 w-3" />
                               <span className="hidden lg:inline">View History</span>
                             </Button>
                           </DialogTrigger>
