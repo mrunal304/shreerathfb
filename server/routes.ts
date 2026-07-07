@@ -38,12 +38,17 @@ export async function registerRoutes(
   app.use(passport.initialize());
   app.use(passport.session());
 
+  const adminUsername = process.env.ADMIN_USERNAME || "admin";
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminPassword) {
+    throw new Error("ADMIN_PASSWORD environment variable is required");
+  }
+
   passport.use(
     new LocalStrategy((username, password, done) => {
-      // Hardcoded admin credentials as requested
-      // Note: Updated password to avoid compromise warnings
-      if (username === "admin" && password === "shreerath_admin_2026") {
-        return done(null, { id: "admin", username: "admin", role: "admin" });
+      if (username === adminUsername && password === adminPassword) {
+        return done(null, { id: "admin", username: adminUsername, role: "admin" });
       }
       return done(null, false, { message: "Invalid credentials" });
     })

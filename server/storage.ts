@@ -235,15 +235,6 @@ export class MongoStorage implements IStorage {
       };
     });
 
-    console.log('Visit numbers assigned:', enrichedResults.map(f => ({
-      name: f.name,
-      phone: f.phoneNumber,
-      visits: f.visits.map(v => ({
-        createdAt: v.createdAt,
-        globalVisitNumber: v.globalVisitNumber
-      }))
-    })));
-
     return {
       data: enrichedResults.slice(skip, skip + filters.limit),
       total: enrichedResults.length
