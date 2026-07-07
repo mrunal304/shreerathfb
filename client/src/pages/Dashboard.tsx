@@ -398,8 +398,8 @@ function FeedbackTab() {
       {/* Date Filter Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50">
         {/* Main filter row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 flex flex-wrap items-center gap-2">
             {/* Label */}
             <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
 
@@ -567,7 +567,7 @@ function FeedbackTab() {
             <Input
               type="date"
               value={rangeFrom}
-              onChange={(e) => { setRangeFrom(e.target.value); setPage(1); }}
+              onChange={(e) => { setRangeFrom(e.target.value); setPage(1); if (e.target.value && rangeTo) setShowSubPicker(false); }}
               className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
             />
             <span className="text-muted-foreground text-sm font-medium">→</span>
