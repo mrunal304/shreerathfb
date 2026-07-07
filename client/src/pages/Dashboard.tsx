@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFeedback, useMarkContacted } from "@/hooks/use-feedback";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -51,11 +51,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'feedback'>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  if (userLoading) return null;
-  if (!user) {
-    setLocation("/admin/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!userLoading && !user) {
+      setLocation("/admin/login");
+    }
+  }, [userLoading, user, setLocation]);
+
+  if (userLoading || !user) return null;
 
   const navItems = (
     <>

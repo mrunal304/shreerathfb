@@ -258,31 +258,27 @@ export class MongoStorage implements IStorage {
     const now = new Date();
     const { dateFrom, dateTo } = options;
 
-    // Determine date range
-    let rangeStart: Date;
-    let rangeEnd: Date;
+    // Compute the date key range (yyyy-MM-dd strings).
+    // We filter on visits.dateKey (stored as 'yyyy-MM-dd' UTC string at submission time)
+    // rather than visits.createdAt (Date) to avoid any UTC/local-timezone ambiguity.
+    let fromKey: string;
+    let toKey: string;
     if (dateFrom && dateTo) {
-      // Explicit UTC so the range is always midnight-to-midnight UTC,
-      // matching how MongoDB stores Date.now() values.
-      rangeStart = new Date(dateFrom + 'T00:00:00.000Z');
-      rangeEnd = new Date(dateTo + 'T23:59:59.999Z');
+      fromKey = dateFrom;   // already 'yyyy-MM-dd' from the frontend
+      toKey   = dateTo;
     } else {
       // Default: last 7 days
-      rangeStart = new Date(now);
-      rangeStart.setDate(now.getDate() - 6);
-      rangeStart.setHours(0, 0, 0, 0);
-      rangeEnd = now;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const d6ago = new Date(now);
+      d6ago.setUTCDate(now.getUTCDate() - 6);
+      fromKey = `${d6ago.getUTCFullYear()}-${pad(d6ago.getUTCMonth() + 1)}-${pad(d6ago.getUTCDate())}`;
+      toKey   = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`;
     }
 
-    // String keys for contactedDateKey comparisons (stored as 'yyyy-MM-dd')
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const fromKey = `${rangeStart.getFullYear()}-${pad(rangeStart.getMonth() + 1)}-${pad(rangeStart.getDate())}`;
-    const toKey = `${rangeEnd.getFullYear()}-${pad(rangeEnd.getMonth() + 1)}-${pad(rangeEnd.getDate())}`;
-
-    // Total visits in range
+    // Total visits in range — match on dateKey (string, lexicographic order works for yyyy-MM-dd)
     const totalStats = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
+      { $match: { "visits.dateKey": { $gte: fromKey, $lte: toKey } } },
       { $group: { _id: null, total: { $sum: 1 } } }
     ]);
     const totalFeedback = totalStats[0]?.total || 0;
@@ -299,7 +295,7 @@ export class MongoStorage implements IStorage {
     // Average ratings in range
     const stats = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
+      { $match: { "visits.dateKey": { $gte: fromKey, $lte: toKey } } },
       {
         $group: {
           _id: null,
@@ -336,13 +332,13 @@ export class MongoStorage implements IStorage {
       if (val > maxVal) { maxVal = val; topCategory = cat; }
     }
 
-    // Trends in range
+    // Trends in range — group by dateKey directly (already 'yyyy-MM-dd')
     const trends = await FeedbackModel.aggregate([
       { $unwind: "$visits" },
-      { $match: { "visits.createdAt": { $gte: rangeStart, $lte: rangeEnd } } },
+      { $match: { "visits.dateKey": { $gte: fromKey, $lte: toKey } } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$visits.createdAt" } },
+          _id: "$visits.dateKey",
           foodQuality: { $avg: "$visits.ratings.foodQuality" },
           foodTaste: { $avg: "$visits.ratings.foodTaste" },
           staffBehavior: { $avg: "$visits.ratings.staffBehavior" },
