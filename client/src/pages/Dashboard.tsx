@@ -27,7 +27,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   LineChart, Line, Cell, Tooltip as RechartsTooltip 
 } from "recharts";
-import { format, subDays, startOfToday, startOfYesterday } from "date-fns";
+import { format, subDays, startOfToday, startOfYesterday, startOfWeek } from "date-fns";
 import { 
   LayoutDashboard, LogOut, Search, Star, TrendingUp, Phone, Eye, Menu, X, CheckCircle2, MessageSquare, Calendar as CalendarIcon
 } from "lucide-react";
@@ -268,43 +268,95 @@ function OverviewTab() {
 function FeedbackTab() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
-  type FilterMode = 'single' | 'month' | 'range';
-  const [filterMode, setFilterMode] = useState<FilterMode>('single');
+
+  // Single date picker (left side — always visible)
+  const [calendarDate, setCalendarDate] = useState<Date>(startOfToday());
+  const [useCalendar, setUseCalendar] = useState<boolean>(false);
+
+  // Dropdown quick filter
+  type QuickOption = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_month' | 'select_month' | 'custom_range';
+  const [quickOption, setQuickOption] = useState<QuickOption>('today');
+
+  // Sub-state for "Select Month" and "Custom Range" inline pickers
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [rangeFrom, setRangeFrom] = useState<string>('');
   const [rangeTo, setRangeTo] = useState<string>('');
 
-  const singleDateKey = format(selectedDate, 'yyyy-MM-dd');
-  // dateKey used for mark-contacted: the single selected date or today for range/month modes
-  const dateKey = filterMode === 'single' ? singleDateKey : format(startOfToday(), 'yyyy-MM-dd');
-
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const currentYear = new Date().getFullYear();
-  const YEARS = [currentYear - 2, currentYear - 1, currentYear];
+  const curYear = new Date().getFullYear();
+  const YEARS = [curYear - 2, curYear - 1, curYear];
 
+  // dateKey used for mark-contacted (always a single YYYY-MM-DD)
+  const dateKey = useCalendar
+    ? format(calendarDate, 'yyyy-MM-dd')
+    : quickOption === 'yesterday'
+    ? format(startOfYesterday(), 'yyyy-MM-dd')
+    : format(startOfToday(), 'yyyy-MM-dd');
+
+  // Compute filter params for the API query — fixes range timezone: pass string directly, no Date parsing
   const filterParams = useMemo(() => {
-    if (filterMode === 'single') return { date: singleDateKey };
-    if (filterMode === 'month') return {
-      dateFrom: format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd'),
-      dateTo: format(new Date(selectedYear, selectedMonth + 1, 0), 'yyyy-MM-dd'),
-    };
-    return (rangeFrom && rangeTo) ? { dateFrom: rangeFrom, dateTo: rangeTo } : {};
-  }, [filterMode, singleDateKey, selectedMonth, selectedYear, rangeFrom, rangeTo]);
+    if (useCalendar) return { date: format(calendarDate, 'yyyy-MM-dd') };
+    const todayKey = format(startOfToday(), 'yyyy-MM-dd');
+    switch (quickOption) {
+      case 'today':      return { date: todayKey };
+      case 'yesterday':  return { date: format(startOfYesterday(), 'yyyy-MM-dd') };
+      case 'this_week':  return {
+        dateFrom: format(startOfWeek(startOfToday(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+        dateTo: todayKey,
+      };
+      case 'this_month': return {
+        dateFrom: format(new Date(curYear, new Date().getMonth(), 1), 'yyyy-MM-dd'),
+        dateTo: todayKey,
+      };
+      case 'last_month': {
+        const lm = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
+        const ly = new Date().getMonth() === 0 ? curYear - 1 : curYear;
+        return {
+          dateFrom: format(new Date(ly, lm, 1), 'yyyy-MM-dd'),
+          dateTo: format(new Date(ly, lm + 1, 0), 'yyyy-MM-dd'),
+        };
+      }
+      case 'select_month': return {
+        dateFrom: format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd'),
+        dateTo: format(new Date(selectedYear, selectedMonth + 1, 0), 'yyyy-MM-dd'),
+      };
+      case 'custom_range':
+        // Pass strings directly — no Date parsing to avoid timezone shift
+        return (rangeFrom && rangeTo) ? { dateFrom: rangeFrom, dateTo: rangeTo } : {};
+      default: return { date: todayKey };
+    }
+  }, [useCalendar, calendarDate, quickOption, selectedMonth, selectedYear, rangeFrom, rangeTo]);
 
   const showingLabel = useMemo(() => {
-    if (filterMode === 'single') return format(selectedDate, 'dd MMM yyyy');
-    if (filterMode === 'month') return format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy');
-    if (filterMode === 'range' && rangeFrom && rangeTo)
-      return `${format(new Date(rangeFrom), 'dd MMM yyyy')} – ${format(new Date(rangeTo), 'dd MMM yyyy')}`;
-    return 'Select a range';
-  }, [filterMode, selectedDate, selectedMonth, selectedYear, rangeFrom, rangeTo]);
+    if (useCalendar) return format(calendarDate, 'dd MMM yyyy');
+    switch (quickOption) {
+      case 'today':      return format(startOfToday(), 'dd MMM yyyy');
+      case 'yesterday':  return format(startOfYesterday(), 'dd MMM yyyy');
+      case 'this_week': {
+        const ws = startOfWeek(startOfToday(), { weekStartsOn: 1 });
+        return `${format(ws, 'dd MMM')} – ${format(startOfToday(), 'dd MMM yyyy')}`;
+      }
+      case 'this_month': return format(startOfToday(), 'MMMM yyyy');
+      case 'last_month': {
+        const lm = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
+        const ly = new Date().getMonth() === 0 ? curYear - 1 : curYear;
+        return format(new Date(ly, lm, 1), 'MMMM yyyy');
+      }
+      case 'select_month': return format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy');
+      case 'custom_range':
+        if (rangeFrom && rangeTo)
+          // Append T12:00:00 to parse as local noon — avoids off-by-one in any timezone
+          return `${format(new Date(rangeFrom + 'T12:00:00'), 'dd MMM yyyy')} – ${format(new Date(rangeTo + 'T12:00:00'), 'dd MMM yyyy')}`;
+        return 'Select From and To dates';
+      default: return '';
+    }
+  }, [useCalendar, calendarDate, quickOption, selectedMonth, selectedYear, rangeFrom, rangeTo]);
 
   const queryClient = useQueryClient();
-  const { data, isLoading, isFetching, refetch } = useFeedback({ 
-    page, 
-    limit: 10, 
+  const { data, isLoading, isFetching, refetch } = useFeedback({
+    page,
+    limit: 10,
     search,
     ...filterParams,
   });
@@ -317,8 +369,7 @@ function FeedbackTab() {
   };
 
   const handleMarkContacted = (id: string) => {
-    const staffName = "Admin"; 
-    
+    const staffName = "Admin";
     markContacted.mutate({ id, data: { contactedBy: staffName, dateKey } }, {
       onSuccess: () => {
         toast({ title: "Updated", description: "Customer marked as contacted" });
@@ -328,10 +379,6 @@ function FeedbackTab() {
       }
     });
   };
-
-  const isToday = filterMode === 'single' && singleDateKey === format(startOfToday(), 'yyyy-MM-dd');
-  const isYesterday = filterMode === 'single' && singleDateKey === format(startOfYesterday(), 'yyyy-MM-dd');
-  const isThisMonth = filterMode === 'month' && selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
 
   return (
     <div className="space-y-6 page-transition">
@@ -362,106 +409,98 @@ function FeedbackTab() {
 
       {/* Date Filter Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 space-y-3">
-        {/* Row 1: Single date + quick buttons + showing label */}
+        {/* Single row: date picker + dropdown + label */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
+            {/* Left: single date picker */}
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
               <Input
                 type="date"
-                value={format(selectedDate, 'yyyy-MM-dd')}
+                value={format(calendarDate, 'yyyy-MM-dd')}
                 onChange={(e) => {
                   if (e.target.value) {
-                    setSelectedDate(new Date(e.target.value + 'T00:00:00'));
-                    setFilterMode('single');
+                    setCalendarDate(new Date(e.target.value + 'T12:00:00'));
+                    setUseCalendar(true);
                     setPage(1);
                   }
                 }}
-                className="pl-9 h-10 w-[160px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary"
+                className={`pl-9 h-10 w-[160px] rounded-xl border-none font-medium focus-visible:ring-primary ${
+                  useCalendar ? 'bg-primary/10 ring-2 ring-primary/30' : 'bg-secondary/5'
+                }`}
               />
             </div>
-            <Button
-              variant={isToday ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setSelectedDate(startOfToday()); setFilterMode('single'); setPage(1); }}
-              className={`rounded-xl h-10 px-5 font-semibold transition-all ${
-                isToday
-                ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90"
-                : "bg-white border-none shadow-sm hover:bg-secondary/5 text-secondary"
-              }`}
-            >
-              Today
-            </Button>
-            <Button
-              variant={isYesterday ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setSelectedDate(startOfYesterday()); setFilterMode('single'); setPage(1); }}
-              className={`rounded-xl h-10 px-5 font-semibold transition-all ${
-                isYesterday
-                ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90"
-                : "bg-white border-none shadow-sm hover:bg-secondary/5 text-secondary"
-              }`}
-            >
-              Yesterday
-            </Button>
-            <Button
-              variant={isThisMonth ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                const now = new Date();
-                setSelectedMonth(now.getMonth());
-                setSelectedYear(now.getFullYear());
-                setFilterMode('month');
+            {/* Dropdown: quick filter options */}
+            <select
+              value={useCalendar ? '' : quickOption}
+              onChange={(e) => {
+                const val = e.target.value as QuickOption;
+                setQuickOption(val);
+                setUseCalendar(false);
                 setPage(1);
               }}
-              className={`rounded-xl h-10 px-5 font-semibold transition-all ${
-                isThisMonth
-                ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90"
-                : "bg-white border-none shadow-sm hover:bg-secondary/5 text-secondary"
-              }`}
+              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[150px]"
             >
-              This Month
-            </Button>
+              {useCalendar && <option value="">— Quick Filters —</option>}
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="select_month">Select Month…</option>
+              <option value="custom_range">Custom Range…</option>
+            </select>
           </div>
           <div className="text-sm font-medium text-secondary bg-secondary/5 px-4 py-2 rounded-xl shrink-0">
             Showing feedback for: <span className="text-primary font-bold">{showingLabel}</span>
           </div>
         </div>
 
-        {/* Row 2: Month/Year dropdowns + Date range */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Month:</span>
-          <select
-            value={selectedMonth}
-            onChange={(e) => { setSelectedMonth(Number(e.target.value)); setFilterMode('month'); setPage(1); }}
-            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-          </select>
-          <select
-            value={selectedYear}
-            onChange={(e) => { setSelectedYear(Number(e.target.value)); setFilterMode('month'); setPage(1); }}
-            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+        {/* Inline: month+year pickers (shown only when "Select Month" is chosen) */}
+        {!useCalendar && quickOption === 'select_month' && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-muted-foreground font-medium">Pick month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => { setSelectedMonth(Number(e.target.value)); setPage(1); }}
+              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => { setSelectedYear(Number(e.target.value)); setPage(1); }}
+              className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        )}
 
-          <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase ml-2">Range:</span>
-          <Input
-            type="date"
-            value={rangeFrom}
-            onChange={(e) => { setRangeFrom(e.target.value); setFilterMode('range'); setPage(1); }}
-            className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
-          />
-          <span className="text-muted-foreground text-sm">→</span>
-          <Input
-            type="date"
-            value={rangeTo}
-            onChange={(e) => { setRangeTo(e.target.value); setFilterMode('range'); setPage(1); }}
-            className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
-          />
-        </div>
+        {/* Inline: from/to date inputs (shown only when "Custom Range" is chosen) */}
+        {!useCalendar && quickOption === 'custom_range' && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-muted-foreground font-medium">From:</span>
+            <Input
+              type="date"
+              value={rangeFrom}
+              onChange={(e) => { setRangeFrom(e.target.value); setPage(1); }}
+              className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+            />
+            <span className="text-muted-foreground text-sm font-medium">→ To:</span>
+            <Input
+              type="date"
+              value={rangeTo}
+              min={rangeFrom}
+              onChange={(e) => { setRangeTo(e.target.value); setPage(1); }}
+              className="h-10 w-[150px] rounded-xl border-none bg-secondary/5 font-medium focus-visible:ring-primary text-sm"
+            />
+            {rangeFrom && !rangeTo && (
+              <span className="text-xs text-muted-foreground italic">Select end date to apply filter</span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-3xl shadow-lg border border-border/50 overflow-hidden">
@@ -500,8 +539,11 @@ function FeedbackTab() {
                 };
 
                 const avgRating = latestVisit ? (Object.values(latestVisit.ratings).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1) : "0.0";
-                const isContacted = filterMode === 'single'
-                  ? !!(item.contactedAt && item.contactedDateKey === singleDateKey)
+                // Single-date modes: check contactedDateKey matches the active date
+                // Range/month modes: check if ever contacted
+                const isSingleDateMode = useCalendar || quickOption === 'today' || quickOption === 'yesterday';
+                const isContacted = isSingleDateMode
+                  ? !!(item.contactedAt && item.contactedDateKey === dateKey)
                   : !!item.contactedAt;
 
                 return (
