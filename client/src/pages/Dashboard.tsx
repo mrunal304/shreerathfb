@@ -288,13 +288,7 @@ function OverviewTab() {
       {showSubPicker && !filterPanelOpen && activeFilter === 'select_month' && (
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Pick Month:</span>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-          </select>
+          {/* Year first — stays open. Month last — auto-closes and applies both. */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -302,7 +296,18 @@ function OverviewTab() {
           >
             {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
+          <select
+            value={selectedMonth}
+            onChange={(e) => {
+              setSelectedMonth(Number(e.target.value));
+              setShowSubPicker(false);  // Auto-close and apply once month is picked
+            }}
+            className="h-10 rounded-xl bg-secondary/5 border-none px-3 text-sm font-medium text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          >
+            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+          </select>
           <button
+            type="button"
             onClick={() => setShowSubPicker(false)}
             className="h-9 px-4 rounded-full text-sm font-medium border border-secondary text-secondary hover:bg-secondary/5 transition-colors"
           >

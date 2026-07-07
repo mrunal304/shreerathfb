@@ -262,8 +262,10 @@ export class MongoStorage implements IStorage {
     let rangeStart: Date;
     let rangeEnd: Date;
     if (dateFrom && dateTo) {
-      rangeStart = new Date(dateFrom + 'T00:00:00');
-      rangeEnd = new Date(dateTo + 'T23:59:59');
+      // Explicit UTC so the range is always midnight-to-midnight UTC,
+      // matching how MongoDB stores Date.now() values.
+      rangeStart = new Date(dateFrom + 'T00:00:00.000Z');
+      rangeEnd = new Date(dateTo + 'T23:59:59.999Z');
     } else {
       // Default: last 7 days
       rangeStart = new Date(now);
