@@ -9,7 +9,7 @@ const parseFeedback = (item: any): Feedback => ({
   contactedAt: item.contactedAt ? new Date(item.contactedAt) : undefined,
 });
 
-export function useFeedback(params?: { page?: number; limit?: number; search?: string; date?: string; rating?: number }) {
+export function useFeedback(params?: { page?: number; limit?: number; search?: string; date?: string; dateFrom?: string; dateTo?: string; rating?: number }) {
   return useQuery({
     queryKey: [api.feedback.list.path, params],
     queryFn: async () => {
@@ -19,6 +19,8 @@ export function useFeedback(params?: { page?: number; limit?: number; search?: s
       if (params?.limit) queryParams.limit = params.limit;
       if (params?.search) queryParams.search = params.search;
       if (params?.date) queryParams.date = params.date;
+      if (params?.dateFrom) queryParams.dateFrom = params.dateFrom;
+      if (params?.dateTo) queryParams.dateTo = params.dateTo;
       if (params?.rating) queryParams.rating = params.rating;
 
       const url = params ? `${api.feedback.list.path}?${new URLSearchParams(queryParams as any)}` : api.feedback.list.path;

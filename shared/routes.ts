@@ -47,6 +47,8 @@ export const api = {
         limit: z.coerce.number().optional(),
         search: z.string().optional(),
         date: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
         rating: z.coerce.number().optional(),
       }).optional(),
       responses: {

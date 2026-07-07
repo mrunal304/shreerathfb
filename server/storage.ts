@@ -159,7 +159,7 @@ export class MongoStorage implements IStorage {
     };
   }
 
-  async getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: any[]; total: number }> {
+  async getFeedback(filters: { page: number; limit: number; search?: string; date?: string; dateFrom?: string; dateTo?: string; rating?: number }): Promise<{ data: any[]; total: number }> {
     const query: any = {};
 
     if (filters.search) {
@@ -169,7 +169,9 @@ export class MongoStorage implements IStorage {
       ];
     }
 
-    if (filters.date) {
+    if (filters.dateFrom && filters.dateTo) {
+      query["visits.dateKey"] = { $gte: filters.dateFrom, $lte: filters.dateTo };
+    } else if (filters.date) {
       query["visits.dateKey"] = filters.date;
     }
 
@@ -181,8 +183,15 @@ export class MongoStorage implements IStorage {
     // Map to plain objects and handle old schema
     let results = data.map(doc => this.mapDocument(doc));
     
-    // If filtering by date, we filter the visits within each feedback document
-    if (filters.date) {
+    // Filter visits within each document to match the date filter
+    if (filters.dateFrom && filters.dateTo) {
+      const from = filters.dateFrom;
+      const to = filters.dateTo;
+      results = results.map(feedback => ({
+        ...feedback,
+        visits: feedback.visits.filter(v => v.dateKey >= from && v.dateKey <= to)
+      })).filter(feedback => feedback.visits.length > 0);
+    } else if (filters.date) {
       results = results.map(feedback => ({
         ...feedback,
         visits: feedback.visits.filter(v => v.dateKey === filters.date)

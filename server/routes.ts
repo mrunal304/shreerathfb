@@ -114,9 +114,11 @@ export async function registerRoutes(
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const search = req.query.search as string;
       const date = req.query.date as string;
+      const dateFrom = req.query.dateFrom as string;
+      const dateTo = req.query.dateTo as string;
       const rating = req.query.rating ? parseInt(req.query.rating as string) : undefined;
 
-      const result = await storage.getFeedback({ page, limit, search, date, rating });
+      const result = await storage.getFeedback({ page, limit, search, date, dateFrom, dateTo, rating });
       
       res.status(200).json({
         data: result.data,

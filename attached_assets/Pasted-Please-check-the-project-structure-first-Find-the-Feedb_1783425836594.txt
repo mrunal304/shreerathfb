@@ -1,0 +1,56 @@
+Please check the project structure first. Find the Feedback page component and its date filtering logic carefully before making any changes.
+
+## What to Add: Date Range Filter on Feedback Page
+
+### Current State:
+- There is a single date picker showing one date (e.g. 07-07-2026)
+- "Today" and "Yesterday" quick buttons exist
+- It only shows feedback for ONE day at a time
+
+### Required Changes:
+
+## 1. Add "Month View" quick button
+Add a new quick select button called "This Month" next to the existing "Today" and "Yesterday" buttons.
+- Clicking "This Month" → shows all feedbacks from 1st of current month to today
+- Style it exactly the same as the existing "Today" / "Yesterday" buttons
+
+## 2. Add Month + Year Dropdown Selector
+Add a separate dropdown (or two dropdowns — one for Month, one for Year) so admin can select any past month.
+
+- Month options: January to December
+- Year options: show last 2-3 years (e.g. 2024, 2025, 2026)
+- When admin selects "April 2026" → table shows ALL feedbacks from April 1 to April 30, 2026
+- The "Showing feedback for:" text on the right should update to show: "April 2026" or the selected range
+
+## 3. Add Date Range Picker (From → To)
+Add two date input fields:
+- "From Date" and "To Date"
+- When both are selected, table filters and shows all feedbacks between those two dates (inclusive)
+- This is for custom ranges like "March 15 to April 20"
+
+## 4. Update the feedback table filtering logic
+- Currently the table filters by single date only
+- Update the filter logic so it can handle:
+  a. Single date (existing behavior — keep as is)
+  b. Full month range (new)
+  c. Custom date range From→To (new)
+- All existing columns (Customer, Visit Info, Ratings, Note, Date, Status, Actions) should work exactly the same — just more rows will show when a range is selected
+
+## 5. "Showing feedback for:" label update
+- Single date selected → "Showing feedback for: 07 Jul 2026" (existing)
+- Month selected → "Showing feedback for: April 2026"
+- Date range selected → "Showing feedback for: 15 Mar 2026 – 20 Apr 2026"
+
+## Layout / Placement:
+- Add the new filters in the same filter bar where "Today" / "Yesterday" exist
+- On desktop: show all filters in one row if possible, or wrap to second row — but keep it clean
+- On mobile: stack them vertically
+- Do NOT change the table layout, columns, or any other part of the page
+
+## Rules:
+- First show me which files you will edit (component file + any data/query logic file)
+- Check how the current date filter logic works before changing it
+- Keep the existing "Today", "Yesterday", and single date picker working exactly as before — do not break them
+- Use the same styling, colors, and font already used in the project
+- Do NOT change anything on the Overview page
+- Do NOT change any other component or page
