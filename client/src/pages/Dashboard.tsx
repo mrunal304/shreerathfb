@@ -470,7 +470,7 @@ function FeedbackTab() {
                         {!(item.contactedAt && item.contactedDateKey === dateKey) && (
                           <Button
                             size="sm"
-                            className="rounded-lg h-8 bg-[#8B0000] text-white hover:bg-[#8B0000]/90 gap-2"
+                            className="rounded-lg h-8 bg-secondary text-white hover:bg-secondary/90 gap-2"
                             onClick={() => handleMarkContacted(item._id)}
                             disabled={markContacted.isPending}
                           >
@@ -555,7 +555,7 @@ function FeedbackTab() {
                                 </span>
                               ) : (
                                 <Button
-                                  className="bg-[#8B0000] text-white hover:bg-[#8B0000]/90"
+                                  className="bg-secondary text-white hover:bg-secondary/90"
                                   onClick={() => handleMarkContacted(item._id)}
                                   disabled={markContacted.isPending}
                                 >
