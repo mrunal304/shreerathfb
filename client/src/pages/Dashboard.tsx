@@ -569,7 +569,7 @@ function FeedbackTab() {
                   return `${n}th Visit`;
                 };
 
-                const avgRating = latestVisit ? (Object.values(latestVisit.ratings).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1) : "0.0";
+                const avgRating = latestVisit ? ((Object.values(latestVisit.ratings) as number[]).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1) : "0.0";
                 const isContacted = ['single_date', 'today', 'yesterday'].includes(quickFilter)
                   ? !!(item.contactedAt && item.contactedDateKey === activeContactDateKey)
                   : !!item.contactedAt;
@@ -674,7 +674,7 @@ function FeedbackTab() {
                                     <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg shadow-sm">
                                       <Star className="h-3 w-3 fill-primary text-primary" />
                                       <span className="font-bold text-primary">
-                                        {(Object.values(visit.ratings).reduce((a: any, b: any) => a + b, 0) / 6).toFixed(1)}
+                                        {((Object.values(visit.ratings) as number[]).reduce((a: number, b: number) => a + b, 0) / 6).toFixed(1)}
                                       </span>
                                     </div>
                                   </div>

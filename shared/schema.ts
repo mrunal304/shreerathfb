@@ -75,6 +75,15 @@ export const contactUpdateSchema = z.object({
 // Types
 export type Visit = z.infer<typeof visitSchema>;
 export type Feedback = z.infer<typeof feedbackSchema> & { _id: string };
+
+export type FeedbackCreateResponse = {
+  feedback: Feedback;
+  customerCard: {
+    totalVisits: number;
+    firstVisitDate: string;
+    lastVisitDate: string;
+  } | null;
+};
 export type CustomerCard = z.infer<typeof customerCardSchema> & { _id: string };
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;

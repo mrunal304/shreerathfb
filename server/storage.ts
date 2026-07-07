@@ -1,4 +1,4 @@
-import { Feedback, InsertFeedback, ContactUpdate, AnalyticsData, Visit, CustomerCard } from "@shared/schema";
+import { Feedback, FeedbackCreateResponse, InsertFeedback, ContactUpdate, AnalyticsData, Visit, CustomerCard } from "@shared/schema";
 import mongoose, { Schema, Document } from "mongoose";
 
 // Mongoose Schema Definition
@@ -84,14 +84,14 @@ FeedbackSchema.index({ phoneNumber: 1 }, { unique: true });
 export const FeedbackModel = mongoose.model<IFeedback>("Feedback", FeedbackSchema);
 
 export interface IStorage {
-  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  createFeedback(feedback: InsertFeedback): Promise<FeedbackCreateResponse>;
   getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: Feedback[]; total: number }>;
   markContacted(id: string, update: ContactUpdate): Promise<Feedback | null>;
   getAnalytics(period: 'week' | 'month'): Promise<AnalyticsData>;
 }
 
 export class MongoStorage implements IStorage {
-  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+  async createFeedback(insertFeedback: InsertFeedback): Promise<FeedbackCreateResponse> {
     const now = new Date();
     const dateKey = now.toISOString().split('T')[0];
 
@@ -189,7 +189,7 @@ export class MongoStorage implements IStorage {
       const to = filters.dateTo;
       results = results.map(feedback => ({
         ...feedback,
-        visits: feedback.visits.filter(v => v.dateKey >= from && v.dateKey <= to)
+        visits: feedback.visits.filter(v => (v.dateKey ?? '') >= from && (v.dateKey ?? '') <= to)
       })).filter(feedback => feedback.visits.length > 0);
     } else if (filters.date) {
       results = results.map(feedback => ({
@@ -199,7 +199,7 @@ export class MongoStorage implements IStorage {
     }
 
     // STEP 1: Get all unique phone numbers from the filtered results
-    const phoneNumbers = [...new Set(results.map(f => f.phoneNumber))];
+    const phoneNumbers = Array.from(new Set(results.map(f => f.phoneNumber)));
 
     // STEP 2: For each phone number, get ALL their feedback visits sorted by createdAt ASC
     const visitHistoryMap: Record<string, Record<string, number>> = {};
@@ -213,7 +213,7 @@ export class MongoStorage implements IStorage {
         // Build a map: createdAt timestamp -> visit number
         visitHistoryMap[phone] = {};
         allVisits.forEach((visit, index) => {
-          const key = new Date(visit.createdAt).getTime().toString();
+          const key = new Date(visit.createdAt ?? new Date()).getTime().toString();
           visitHistoryMap[phone][key] = index + 1;
         });
       }
@@ -225,7 +225,7 @@ export class MongoStorage implements IStorage {
       return {
         ...feedback,
         visits: feedback.visits.map(v => {
-          const createdAtKey = new Date(v.createdAt).getTime().toString();
+          const createdAtKey = new Date(v.createdAt ?? new Date()).getTime().toString();
           const visitNum = visitHistoryMap[phone]?.[createdAtKey] || 1;
           return {
             ...v,
@@ -373,8 +373,8 @@ export class MongoStorage implements IStorage {
         rating: averages[cat as keyof typeof averages]
       })),
       feedbackVolume: [
-        { name: 'Contacted', value: result.contacted },
-        { name: 'Pending', value: result.total - result.contacted }
+        { name: 'Contacted', value: contactedThisMonth },
+        { name: 'Pending', value: Math.max(0, totalFeedbackThisMonth - contactedThisMonth) }
       ]
     };
   }

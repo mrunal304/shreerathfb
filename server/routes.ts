@@ -20,7 +20,7 @@ export async function registerRoutes(
   const SessionStore = MemoryStore(session);
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "shree-rath-secret",
+      secret: process.env.SESSION_SECRET!,
       resave: false,
       saveUninitialized: false,
       store: new SessionStore({
