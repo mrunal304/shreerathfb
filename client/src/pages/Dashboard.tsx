@@ -397,6 +397,7 @@ function FeedbackTab() {
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Filter by Date:</span>
             {/* Single date picker */}
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
