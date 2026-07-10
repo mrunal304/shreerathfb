@@ -83,6 +83,25 @@ FeedbackSchema.index({ phoneNumber: 1 }, { unique: true });
 
 export const FeedbackModel = mongoose.model<IFeedback>("Feedback", FeedbackSchema);
 
+// Admin/staff user accounts, stored in MongoDB so they work identically
+// across all environments (dev and any deployment), instead of relying on
+// in-memory/hardcoded credentials.
+interface IUser extends Document {
+  username: string;
+  password: string; // bcrypt hash
+  role: string;
+  createdAt: Date;
+}
+
+const UserSchema = new Schema<IUser>({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, required: true, default: "admin" },
+  createdAt: { type: Date, default: Date.now },
+});
+
+export const UserModel = mongoose.model<IUser>("User", UserSchema);
+
 export interface IStorage {
   createFeedback(feedback: InsertFeedback): Promise<FeedbackCreateResponse>;
   getFeedback(filters: { page: number; limit: number; search?: string; date?: string; rating?: number }): Promise<{ data: Feedback[]; total: number }>;

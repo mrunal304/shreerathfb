@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: "public", // shreerathfb-deployment
+    name: "public",
     script: "./dist/index.cjs",
     instances: 1,
     autorestart: true,
@@ -10,7 +10,9 @@ module.exports = {
       NODE_ENV: "production",
       PORT: 3005,
       MONGODB_URI: "mongodb+srv://Mrunali:Mrunalifeedback@feedbackqrform.fbhwhe8.mongodb.net/shreerathqr?appName=feedbackqrform",
-      SESSION_SECRET: "shree-rath-secret"
+      SESSION_SECRET: "shree-rath-secret",
+      ADMIN_USERNAME: "admin",
+      ADMIN_PASSWORD: "shreerath_admin_2026"
     }
   }]
 };

@@ -74,6 +74,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Current Status
 - Project imported and configured.
-- `tsx` installed and dev server running.
-- MongoDB connection verified.
+- Dependencies installed via `npm install`.
+- `MONGODB_URI` secret provided by user; MongoDB connection verified.
 - App is responding correctly on port 5000.

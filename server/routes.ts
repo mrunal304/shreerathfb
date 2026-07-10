@@ -7,7 +7,9 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcryptjs";
 import { connectDB } from "./db";
+import { UserModel } from "./storage";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -38,15 +40,21 @@ export async function registerRoutes(
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const adminUsername = process.env.ADMIN_USERNAME || "admin";
-  const adminPassword = process.env.ADMIN_PASSWORD || "shreerath_admin_2026";
-
   passport.use(
-    new LocalStrategy((username, password, done) => {
-      if (username === adminUsername && password === adminPassword) {
-        return done(null, { id: "admin", username: adminUsername, role: "admin" });
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await UserModel.findOne({ username });
+        if (!user) {
+          return done(null, false, { message: "Invalid credentials" });
+        }
+        const matches = await bcrypt.compare(password, user.password);
+        if (!matches) {
+          return done(null, false, { message: "Invalid credentials" });
+        }
+        return done(null, { id: user.id, username: user.username, role: user.role });
+      } catch (err) {
+        return done(err);
       }
-      return done(null, false, { message: "Invalid credentials" });
     })
   );
 
