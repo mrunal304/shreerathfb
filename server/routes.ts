@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import MongoStore from "connect-mongo";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
@@ -18,19 +18,18 @@ export async function registerRoutes(
   // Connect to MongoDB
   await connectDB();
 
-  // Session Setup
-  const SessionStore = MemoryStore(session);
+  // Session Setup — persisted in MongoDB so sessions survive restarts/deploys
   app.use(
     session({
       secret: process.env.SESSION_SECRET!,
       resave: false,
       saveUninitialized: false,
-      store: new SessionStore({
-        checkPeriod: 86400000,
+      store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI!,
       }),
-      cookie: { 
-        secure: app.get("env") === "production",
-        sameSite: "lax",
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       },
     })
