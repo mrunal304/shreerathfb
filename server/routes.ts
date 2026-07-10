@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
-import MongoStore from "connect-mongo";
+import { MongoStore } from "connect-mongo";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
