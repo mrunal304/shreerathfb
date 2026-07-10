@@ -18,15 +18,23 @@ export async function connectDB() {
   }
 }
 
-// Make sure an admin account always exists in MongoDB so login works the
-// same way in every environment (dev and any deployment), instead of relying
-// on hardcoded/in-memory credentials that don't persist to the real database.
+// Auto-create the admin user on startup so it's always available in MongoDB
+// after a fresh `git pull` / restart / deployment, without any manual step.
+// Only seeds when the 'users' collection is completely empty — if any user
+// already exists, this is a no-op.
 async function ensureAdminUser() {
-  const username = process.env.ADMIN_USERNAME || "admin";
-  const existing = await UserModel.findOne({ username });
+  const existing = await UserModel.findOne({});
   if (existing) return;
 
-  const plainPassword = process.env.ADMIN_PASSWORD || "shreerath_admin_2026";
+  const username = process.env.ADMIN_USERNAME;
+  const plainPassword = process.env.ADMIN_PASSWORD;
+  if (!username || !plainPassword) {
+    console.warn(
+      "ADMIN_USERNAME/ADMIN_PASSWORD not set — skipping admin user creation"
+    );
+    return;
+  }
+
   const password = await bcrypt.hash(plainPassword, 10);
   await UserModel.create({ username, password, role: "admin" });
   console.log(`Created default admin user "${username}" in MongoDB`);
