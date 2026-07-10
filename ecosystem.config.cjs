@@ -13,6 +13,7 @@ module.exports = {
       SESSION_SECRET: "TH44OuZsO8Eo1xeojLGNfJYBIhv6oANERF57ZpijD2ALHThp2a0zoghjJDW1ygylOUgOoaT5xY2kwFmIxHFF9w==",
       ADMIN_USERNAME: "admin",
       ADMIN_PASSWORD: "shreerath_admin_2026"
+      TRUST_PROXY: "1",
     }
   }]
 };
