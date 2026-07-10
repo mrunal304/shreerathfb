@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: "shreerath-app",
+    name: "public", // shreerathfb-deployment
     script: "./dist/index.cjs",
     instances: 1,
     autorestart: true,
